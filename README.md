@@ -25,7 +25,7 @@ AnyT Notebook is a VS Code extension that brings a Jupyter-style notebook experi
 
 ### From VSIX
 
-1. Download the latest `.vsix` file from the [releases](https://github.com/anyt-io/anyt-notebook/releases)
+1. Download the latest `.vsix` file from the releases
 2. In VS Code, open Command Palette (Ctrl+Shift+P / Cmd+Shift+P)
 3. Run "Extensions: Install from VSIX..."
 4. Select the downloaded file
@@ -163,10 +163,9 @@ Configure AnyT Notebook in VS Code settings:
 
 - [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=AnyT.anyt-notebook)
 - [GitHub Issues](https://github.com/anyt-io/notebook/issues)
-- [Examples](examples/)
 
 ## License
 
-Copyright (c) 2025 AnyTransformer Inc. All rights reserved.
+Copyright (c) 2026 AnyTransformer Inc. All rights reserved.
 
 See the [LICENSE](LICENSE) file for details.
