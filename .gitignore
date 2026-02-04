@@ -1,0 +1,15 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor directories and files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Workflow outputs (when testing examples locally)
+*_output/
+*_workspace/
+.anyt/
