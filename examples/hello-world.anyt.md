@@ -1,17 +1,17 @@
 ---
+schema: "2.0"
 name: hello-world
-version: 1.0.0
 workdir: hello_output
 ---
 
 # Hello World
 
-A simple workflow to get started with AnyT Notebook.
+A simple notebook to get started with AnyT Notebook.
 
 <note id="intro">
 ## Welcome to AnyT Notebook
 
-This is your first workflow! It demonstrates:
+This is your first notebook! It demonstrates:
 - Task cells for AI execution
 - Shell cells for scripts
 - Note cells for documentation
@@ -40,9 +40,9 @@ Make it encouraging for someone learning to code.
 </task>
 
 <note id="complete">
-## Workflow Complete
+## Notebook Complete
 
-You've successfully run your first AnyT workflow!
+You've successfully run your first AnyT notebook!
 
 Check the `hello_output` folder for the generated files.
 </note>

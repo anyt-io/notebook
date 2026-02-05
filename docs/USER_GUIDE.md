@@ -1,13 +1,13 @@
 # AnyT Notebook User Guide
 
-This guide covers everything you need to know to create and run AI-powered workflows with AnyT Notebook.
+This guide covers everything you need to know to create and run AI-powered notebooks with AnyT Notebook.
 
 ## Table of Contents
 
 - [Getting Started](#getting-started)
 - [Understanding the Interface](#understanding-the-interface)
 - [Working with Cells](#working-with-cells)
-- [Workflow Inputs](#workflow-inputs)
+- [Notebook Inputs](#notebook-inputs)
 - [Execution Modes](#execution-modes)
 - [Form-Based Inputs](#form-based-inputs)
 - [Best Practices](#best-practices)
@@ -22,25 +22,26 @@ This guide covers everything you need to know to create and run AI-powered workf
   - **Claude Code** (recommended): Install from [claude.ai/code](https://claude.ai/code)
   - **Codex**: Install via `npm install -g @openai/codex`
 
-### Creating Your First Workflow
+### Creating Your First Notebook
 
 1. **Create a new file** with `.anyt.md` extension
-2. **Add frontmatter** to configure your workflow:
+2. **Add frontmatter** to configure your notebook:
 
 ```yaml
 ---
-name: my-workflow
+schema: "2.0"
+name: my-notebook
 workdir: output
 ---
 ```
 
-3. **Add a title** (optional but recommended):
+3. **Add a title** matching the `name` field:
 
 ```markdown
-# My Workflow
+# my-notebook
 ```
 
-4. **Add cells** to define your workflow steps
+4. **Add cells** to define your notebook steps
 
 ### Understanding the Workdir
 
@@ -57,7 +58,7 @@ All cell state (execution logs, progress) is stored in `{workdir}/.anyt/cells/`.
 
 The top toolbar provides quick actions:
 
-- **Run All**: Execute the entire workflow from the beginning
+- **Run All**: Execute the entire notebook from the beginning
 - **Run Selected**: Run only the currently selected cell
 - **Stop**: Pause execution
 - **Reset**: Clear all execution state and start fresh
@@ -134,7 +135,7 @@ npm run build
 
 ### Input Cells
 
-Input cells pause the workflow and wait for user interaction:
+Input cells pause the notebook and wait for user interaction:
 
 ```xml
 <input id="review-code">
@@ -146,15 +147,10 @@ Please review the generated authentication code in `src/api/auth.ts`.
 - [ ] Security best practices followed
 - [ ] Error handling is comprehensive
 - [ ] Code is well-documented
-
-**Actions:**
-- `continue` - Approve and proceed
-- `edit` - Make manual changes first
-- `reject` - Stop the workflow
 </input>
 ```
 
-See [Form-Based Inputs](#form-based-inputs) for structured data collection.
+Input cells can also include structured forms. See [Form-Based Inputs](#form-based-inputs).
 
 ### Note Cells
 
@@ -184,13 +180,14 @@ before proceeding to production deployment.
 </break>
 ```
 
-## Workflow Inputs
+## Notebook Inputs
 
 Define variables in frontmatter that can be referenced in tasks:
 
 ```yaml
 ---
-name: deploy-workflow
+schema: "2.0"
+name: deploy-notebook
 workdir: deployment
 inputs:
   environment: staging
@@ -224,11 +221,11 @@ Executes only the selected cell, useful for:
 
 ### Continue from Cell
 
-When a workflow pauses (at input or break cells), click "Continue" to proceed.
+When a notebook pauses (at input or break cells), click "Continue" to proceed.
 
 ## Form-Based Inputs
 
-Input cells can include YAML-defined forms for structured data collection:
+Input cells can include a `<form type="dsl">` block for structured data collection:
 
 ```xml
 <input id="config-form">
@@ -236,73 +233,89 @@ Input cells can include YAML-defined forms for structured data collection:
 
 Please configure the deployment settings:
 
-```yaml
-fields:
-  - name: environment
-    type: select
-    label: Target Environment
-    required: true
-    options:
-      - value: dev
-        label: Development
-      - value: staging
-        label: Staging
-      - value: prod
-        label: Production
-
-  - name: replicas
-    type: number
-    label: Number of Replicas
-    default: 3
-    validation:
-      min: 1
-      max: 10
-
-  - name: enableMonitoring
-    type: checkbox
-    label: Enable Monitoring
-    default: true
-```
+<form type="dsl">
+environment: select[dev,staging,prod] | Target Environment | required
+replicas: number | Number of Replicas | default=3, min=1, max=10
+enableMonitoring: checkbox | Enable Monitoring | default=true
+</form>
 </input>
+```
+
+### Form DSL Syntax
+
+Each line defines a form field:
+
+```
+fieldName: fieldType[options] | Label Text | modifier1, modifier2
 ```
 
 ### Field Types
 
-| Type | Description |
-|------|-------------|
-| `text` | Single-line text input |
-| `textarea` | Multi-line text input |
-| `number` | Numeric input with min/max validation |
-| `select` | Dropdown selection |
-| `radio` | Radio button group |
-| `checkbox` | Boolean toggle |
-| `multiselect` | Multiple selection |
+| Type | Aliases | Description |
+|------|---------|-------------|
+| `text` | `string`, `str` | Single-line text input |
+| `textarea` | — | Multi-line text input |
+| `number` | `int`, `integer` | Numeric input |
+| `checkbox` | `bool`, `boolean` | Boolean toggle |
+| `select` | `enum` | Dropdown (single selection) |
+| `radio` | — | Radio button group |
+| `multiselect` | `multi` | Checkbox group (multiple selection) |
 
-### Field Properties
+### Modifiers
 
-| Property | Description |
-|----------|-------------|
-| `name` | Unique identifier for the field |
-| `type` | Field type (see above) |
-| `label` | Display label |
-| `description` | Help text |
-| `required` | Whether field is required |
-| `default` | Default value |
-| `placeholder` | Placeholder text |
-| `options` | Array of options (for select/radio/multiselect) |
-| `validation` | Validation rules |
+| Modifier | Applies to | Example |
+|----------|-----------|---------|
+| `required` | All | `required` |
+| `default=value` | All | `default=react` |
+| `placeholder="text"` | text, textarea, number | `placeholder="Enter name"` |
+| `description="text"` | All | `description="Help text"` |
+| `minLength=N` | text, textarea | `minLength=3` |
+| `maxLength=N` | text, textarea | `maxLength=100` |
+| `pattern="regex"` | text | `pattern="^[a-z]+$"` |
+| `min=N` | number | `min=0` |
+| `max=N` | number | `max=65535` |
+| `rows=N` | textarea | `rows=5` |
+| `minItems=N` | multiselect | `minItems=1` |
+| `maxItems=N` | multiselect | `maxItems=3` |
 
-### Validation Rules
+### Options
 
-```yaml
-validation:
-  minLength: 2       # Minimum string length
-  maxLength: 100     # Maximum string length
-  pattern: ^[a-z]+$  # Regex pattern
-  min: 0             # Minimum number
-  max: 100           # Maximum number
-  minItems: 1        # Minimum selections (multiselect)
-  maxItems: 5        # Maximum selections (multiselect)
+For select, radio, and multiselect fields, use square brackets:
+
+```
+database: select[sqlite,postgres,mysql] | Database | default=sqlite
+```
+
+### Comments
+
+Lines starting with `#` inside `<form>` are ignored:
+
+```xml
+<form type="dsl">
+# Basic info
+name: text | Name | required
+# Settings
+debug: checkbox | Debug Mode
+</form>
+```
+
+### Complete Form Example
+
+```xml
+<input id="project-config">
+## Configure Your Project
+
+<form type="dsl">
+# Basic info
+projectName: text | Project Name | required, minLength=3, pattern="^[a-z][a-z0-9-]*$"
+description: textarea | Description | rows=3, placeholder="Describe your project..."
+# Tech stack
+framework: select[react,vue,svelte] | Framework | default=react, required
+features: multiselect[auth,api,database,testing] | Features | minItems=1
+port: int | Dev Port | min=1024, max=65535, default=3000
+isPublic: bool | Public Repository
+</form>
+</input>
 ```
 
 ## Best Practices
@@ -312,9 +325,9 @@ validation:
 1. **Be specific**: Include all requirements and constraints
 2. **Specify outputs**: Use `**Output:** path/to/file` to declare expected files
 3. **Break down complexity**: Split large tasks into smaller, focused cells
-4. **Provide context**: Reference workflow inputs and previous outputs
+4. **Provide context**: Reference notebook inputs and previous outputs
 
-### Organizing Workflows
+### Organizing Notebooks
 
 1. **Use notes as section headers**: Group related tasks with note cells
 2. **Add checkpoints**: Use input/break cells at critical points
@@ -323,7 +336,7 @@ validation:
 ### Managing State
 
 1. **Reset when needed**: Use "Reset" to clear all state and start fresh
-2. **Re-run single cells**: Test individual tasks without running the entire workflow
+2. **Re-run single cells**: Test individual tasks without running the entire notebook
 3. **Check the workdir**: All outputs and logs are in `{workdir}/.anyt/cells/`
 
 ## Troubleshooting
@@ -342,7 +355,7 @@ validation:
 
 ### Form not rendering
 
-- Ensure YAML is properly formatted with correct indentation
+- Ensure the `<form type="dsl">` block is properly formatted
 - Check that field types are valid
 - Verify required properties are present
 

@@ -1,6 +1,6 @@
 ---
+schema: "2.0"
 name: product-video
-version: 1.0.0
 workdir: video_output
 inputs:
   productName: My Product
@@ -14,12 +14,12 @@ inputs:
 
 # Product Video Production
 
-A comprehensive workflow for creating professional product videos.
+A comprehensive notebook for creating professional product videos.
 
 <note id="overview">
 ## Product Video Pipeline
 
-This workflow orchestrates video production through 6 stages:
+This notebook orchestrates video production through 6 stages:
 
 1. **Storyboarding** - Design scenes and write voiceover scripts
 2. **User Review** - Checkpoint for approving the storyboard
@@ -182,7 +182,7 @@ Requirements:
 </task>
 
 <note id="complete">
-## Workflow Complete
+## Notebook Complete
 
 Your video project output:
 

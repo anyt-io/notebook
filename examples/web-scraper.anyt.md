@@ -1,20 +1,20 @@
 ---
+schema: "2.0"
 name: web-scraper
-version: 1.0.0
 workdir: scraper_output
 inputs:
   targetUrl: https://example.com
   outputFormat: json
 ---
 
-# Web Scraper Workflow
+# Web Scraper
 
-A workflow that demonstrates scraping and processing web content.
+A notebook that demonstrates scraping and processing web content.
 
 <note id="overview">
 ## Web Scraper Pipeline
 
-This workflow:
+This notebook:
 1. Sets up directory structure
 2. Scrapes target URL
 3. Reviews scraped content

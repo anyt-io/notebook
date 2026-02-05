@@ -1,17 +1,17 @@
 # AnyT Notebook
 
-**Define workflows in natural language, let AI execute them.**
+**Define tasks in natural language, let AI execute them.**
 
-AnyT Notebook is a VS Code extension that brings a Jupyter-style notebook experience for creating, editing, and running AI-powered workflows. Write your tasks in plain English, and let AI agents like Claude Code execute them step by step.
+AnyT Notebook is a VS Code extension that brings a Jupyter-style notebook experience for creating, editing, and running AI-powered tasks. Write your tasks in plain English, and let AI agents like Claude Code execute them step by step.
 
 ## Features
 
-- **Natural Language Workflows**: Define tasks in plain English using `.anyt.md` files
+- **Natural Language Tasks**: Define tasks in plain English using `.anyt.md` files
 - **Jupyter-Style Interface**: Familiar notebook UI with cells, execution numbers, and drag-and-drop reordering
 - **AI-Powered Execution**: Integrates with Claude Code and Codex to execute tasks
 - **Five Cell Types**: Tasks (AI), Shell (scripts), Input (forms), Note (markdown), Break (pause points)
 - **Human-in-the-Loop**: Add input cells with forms or break points for manual intervention
-- **Persistent State**: Workflow execution state persists across VS Code sessions
+- **Persistent State**: Execution state persists across VS Code sessions
 - **Real-time Progress**: Watch AI agents work with streaming output updates
 
 ## Installation
@@ -32,17 +32,18 @@ AnyT Notebook is a VS Code extension that brings a Jupyter-style notebook experi
 
 ## Quick Start
 
-1. Create a new file with `.anyt.md` extension (e.g., `workflow.anyt.md`)
+1. Create a new file with `.anyt.md` extension (e.g., `notebook.anyt.md`)
 2. The AnyT Notebook editor will open automatically
 3. Add tasks using the "+" button or write them directly:
 
 ```yaml
 ---
-name: my-first-workflow
+schema: "2.0"
+name: my-first-notebook
 workdir: output
 ---
 
-# My First Workflow
+# my-first-notebook
 
 <task id="hello">
 Create a file called hello.txt with a friendly greeting message.
@@ -54,13 +55,13 @@ Create a file called goodbye.txt with a farewell message.
 ```
 
 4. Select your AI runtime (Claude Code recommended)
-5. Click "Run" to execute the workflow
+5. Click "Run" to execute the notebook
 
 ## Documentation
 
 - [User Guide](docs/USER_GUIDE.md) - Complete guide to using AnyT Notebook
 - [File Format Specification](docs/FILE_FORMAT.md) - Detailed `.anyt.md` format reference
-- [Examples](examples/) - Sample workflows to get you started
+- [Examples](examples/) - Sample notebooks to get you started
 
 ## Cell Types
 
@@ -93,16 +94,13 @@ npm run build
 Form-based user interaction with validation:
 
 ```xml
-<input id="review">
-Please review the generated files.
+<input id="config">
+Configure your project:
 
-```yaml
-fields:
-  - name: approved
-    type: checkbox
-    label: Approve changes
-    required: true
-```
+<form type="dsl">
+projectName: text | Project Name | required, minLength=3
+framework: select[react,vue,svelte] | Framework | default=react
+</form>
 </input>
 ```
 
@@ -120,7 +118,7 @@ Markdown documentation that auto-completes when reached.
 
 ### Break Cells
 
-Workflow pause points:
+Notebook pause points:
 
 ```xml
 <break id="checkpoint">
@@ -149,15 +147,15 @@ Configure AnyT Notebook in VS Code settings:
 | Command | Description |
 |---------|-------------|
 | `AnyT: New Notebook` | Create a new .anyt.md notebook |
-| `AnyT: Run Workflow` | Run all cells from beginning |
+| `AnyT: Run Notebook` | Run all cells from beginning |
 | `AnyT: Run Task` | Run a single cell |
 | `AnyT: Add Task` | Add a new task cell |
 | `AnyT: Add Shell Cell` | Add a new shell cell |
 | `AnyT: Add Input Cell` | Add a new input cell |
 | `AnyT: Add Note Cell` | Add a new note cell |
 | `AnyT: Pause Execution` | Stop current execution |
-| `AnyT: Reset Workflow` | Clear all cell execution state |
-| `AnyT: Export to Script` | Export workflow as shell script |
+| `AnyT: Reset Notebook` | Clear all cell execution state |
+| `AnyT: Export to Script` | Export notebook as shell script |
 
 ## Links
 
