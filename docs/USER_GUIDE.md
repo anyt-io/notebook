@@ -1,6 +1,6 @@
 # AnyT Notebook User Guide
 
-This guide covers everything you need to know to create and run AI-powered notebooks with AnyT Notebook.
+This guide covers everything you need to know to create and run AI-powered workflows with AnyT Notebook.
 
 ## Table of Contents
 
@@ -10,6 +10,7 @@ This guide covers everything you need to know to create and run AI-powered noteb
 - [Notebook Inputs](#notebook-inputs)
 - [Execution Modes](#execution-modes)
 - [Form-Based Inputs](#form-based-inputs)
+- [Workflow Development Lifecycle](#workflow-development-lifecycle)
 - [Best Practices](#best-practices)
 - [Troubleshooting](#troubleshooting)
 
@@ -41,7 +42,7 @@ workdir: output
 # my-notebook
 ```
 
-4. **Add cells** to define your notebook steps
+4. **Add cells** to define your workflow steps
 
 ### Understanding the Workdir
 
@@ -225,7 +226,7 @@ When a notebook pauses (at input or break cells), click "Continue" to proceed.
 
 ## Form-Based Inputs
 
-Input cells can include a `<form type="dsl">` block for structured data collection:
+Input cells can include a `<form type="json">` block for structured data collection:
 
 ```xml
 <input id="config-form">
@@ -233,71 +234,77 @@ Input cells can include a `<form type="dsl">` block for structured data collecti
 
 Please configure the deployment settings:
 
-<form type="dsl">
-environment: select[dev,staging,prod] | Target Environment | required
-replicas: number | Number of Replicas | default=3, min=1, max=10
-enableMonitoring: checkbox | Enable Monitoring | default=true
+<form type="json">
+{
+  "fields": [
+    {
+      "name": "environment",
+      "type": "select",
+      "label": "Target Environment",
+      "required": true,
+      "options": [
+        { "value": "dev", "label": "Development" },
+        { "value": "staging", "label": "Staging" },
+        { "value": "prod", "label": "Production" }
+      ]
+    },
+    {
+      "name": "replicas",
+      "type": "number",
+      "label": "Number of Replicas",
+      "default": 3,
+      "validation": { "min": 1, "max": 10 }
+    },
+    {
+      "name": "enableMonitoring",
+      "type": "checkbox",
+      "label": "Enable Monitoring",
+      "default": true
+    }
+  ]
+}
 </form>
 </input>
 ```
 
-### Form DSL Syntax
-
-Each line defines a form field:
-
-```
-fieldName: fieldType[options] | Label Text | modifier1, modifier2
-```
-
 ### Field Types
 
-| Type | Aliases | Description |
-|------|---------|-------------|
-| `text` | `string`, `str` | Single-line text input |
-| `textarea` | — | Multi-line text input |
-| `number` | `int`, `integer` | Numeric input |
-| `checkbox` | `bool`, `boolean` | Boolean toggle |
-| `select` | `enum` | Dropdown (single selection) |
-| `radio` | — | Radio button group |
-| `multiselect` | `multi` | Checkbox group (multiple selection) |
+| Type | Description |
+|------|-------------|
+| `text` | Single-line text input |
+| `textarea` | Multi-line text input |
+| `number` | Numeric input |
+| `checkbox` | Boolean toggle |
+| `select` | Dropdown (single selection) |
+| `radio` | Radio button group |
+| `multiselect` | Checkbox group (multiple selection) |
 
-### Modifiers
+### Field Properties
 
-| Modifier | Applies to | Example |
-|----------|-----------|---------|
-| `required` | All | `required` |
-| `default=value` | All | `default=react` |
-| `placeholder="text"` | text, textarea, number | `placeholder="Enter name"` |
-| `description="text"` | All | `description="Help text"` |
-| `minLength=N` | text, textarea | `minLength=3` |
-| `maxLength=N` | text, textarea | `maxLength=100` |
-| `pattern="regex"` | text | `pattern="^[a-z]+$"` |
-| `min=N` | number | `min=0` |
-| `max=N` | number | `max=65535` |
-| `rows=N` | textarea | `rows=5` |
-| `minItems=N` | multiselect | `minItems=1` |
-| `maxItems=N` | multiselect | `maxItems=3` |
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `name` | string | Yes | Unique field identifier |
+| `type` | string | Yes | Field type |
+| `label` | string | Yes | Display label |
+| `description` | string | No | Help text below field |
+| `required` | boolean | No | Whether field must be filled |
+| `default` | varies | No | Default value |
+| `placeholder` | string | No | Placeholder text |
+| `options` | array | Conditional | Options for select/radio/multiselect |
+| `rows` | number | No | Rows for textarea |
+| `validation` | object | No | Validation rules |
 
-### Options
+### Validation Rules
 
-For select, radio, and multiselect fields, use square brackets:
-
-```
-database: select[sqlite,postgres,mysql] | Database | default=sqlite
-```
-
-### Comments
-
-Lines starting with `#` inside `<form>` are ignored:
-
-```xml
-<form type="dsl">
-# Basic info
-name: text | Name | required
-# Settings
-debug: checkbox | Debug Mode
-</form>
-```
+| Rule | Applies to | Example |
+|------|-----------|---------|
+| `minLength` | text, textarea | `{ "minLength": 3 }` |
+| `maxLength` | text, textarea | `{ "maxLength": 100 }` |
+| `pattern` | text | `{ "pattern": "^[a-z]+$" }` |
+| `min` | number | `{ "min": 0 }` |
+| `max` | number | `{ "max": 65535 }` |
+| `minItems` | multiselect | `{ "minItems": 1 }` |
+| `maxItems` | multiselect | `{ "maxItems": 3 }` |
 
 ### Complete Form Example
 
@@ -305,18 +312,85 @@ debug: checkbox | Debug Mode
 <input id="project-config">
 ## Configure Your Project
 
-<form type="dsl">
-# Basic info
-projectName: text | Project Name | required, minLength=3, pattern="^[a-z][a-z0-9-]*$"
-description: textarea | Description | rows=3, placeholder="Describe your project..."
-# Tech stack
-framework: select[react,vue,svelte] | Framework | default=react, required
-features: multiselect[auth,api,database,testing] | Features | minItems=1
-port: int | Dev Port | min=1024, max=65535, default=3000
-isPublic: bool | Public Repository
+<form type="json">
+{
+  "fields": [
+    {
+      "name": "projectName",
+      "type": "text",
+      "label": "Project Name",
+      "required": true,
+      "placeholder": "my-app",
+      "validation": { "minLength": 3, "pattern": "^[a-z][a-z0-9-]*$" }
+    },
+    {
+      "name": "description",
+      "type": "textarea",
+      "label": "Description",
+      "rows": 3,
+      "placeholder": "Describe your project..."
+    },
+    {
+      "name": "framework",
+      "type": "select",
+      "label": "Framework",
+      "required": true,
+      "default": "react",
+      "options": [
+        { "value": "react", "label": "React" },
+        { "value": "vue", "label": "Vue" },
+        { "value": "svelte", "label": "Svelte" }
+      ]
+    },
+    {
+      "name": "features",
+      "type": "multiselect",
+      "label": "Features to Enable",
+      "description": "Select all features you want to use",
+      "options": [
+        { "value": "analytics", "label": "Analytics" },
+        { "value": "reports", "label": "Reports" },
+        { "value": "api", "label": "API" },
+        { "value": "webhooks", "label": "Webhooks" }
+      ],
+      "validation": { "minItems": 1, "maxItems": 3 }
+    },
+    {
+      "name": "port",
+      "type": "number",
+      "label": "Dev Port",
+      "default": 3000,
+      "validation": { "min": 1024, "max": 65535 }
+    },
+    {
+      "name": "isPublic",
+      "type": "checkbox",
+      "label": "Public Repository"
+    }
+  ]
+}
 </form>
 </input>
 ```
+
+## Workflow Development Lifecycle
+
+AnyT Notebook treats AI workflows like code -- they go through a development lifecycle:
+
+### Phase 1: Create
+Write the initial cells. Think about what needs to happen, in what order. What should the AI do? What can a shell script handle? Where does the human need to decide?
+
+### Phase 2: Debug
+Add break cells liberally -- after every AI task if you want. Run the notebook. At each breakpoint, inspect the output. Did the AI do what you expected?
+
+### Phase 3: Iterate
+Some steps will fail. Edit the task description to be clearer. Add a shell cell to install a missing dependency. Insert an input cell where you need human choice. Split a task that's too big into two.
+
+### Phase 4: Harden
+The workflow works. Remove unnecessary breakpoints. Keep only the ones at critical review points. The workflow runs with minimal human intervention.
+
+### Phase 5: Share
+Check the `.anyt.md` file into git. Share it with teammates. They get a debugged, proven workflow they can understand and run.
 
 ## Best Practices
 
@@ -332,6 +406,7 @@ isPublic: bool | Public Repository
 1. **Use notes as section headers**: Group related tasks with note cells
 2. **Add checkpoints**: Use input/break cells at critical points
 3. **Name cells meaningfully**: Use descriptive IDs like `create-user-api` not `task-1`
+4. **Mix cell types**: Use shell for deterministic steps, tasks for creative AI work
 
 ### Managing State
 
@@ -355,9 +430,9 @@ isPublic: bool | Public Repository
 
 ### Form not rendering
 
-- Ensure the `<form type="dsl">` block is properly formatted
+- Ensure the `<form type="json">` block contains valid JSON
 - Check that field types are valid
-- Verify required properties are present
+- Verify required properties (`name`, `type`, `label`) are present
 
 ### Execution state not persisting
 

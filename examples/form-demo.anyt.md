@@ -25,11 +25,41 @@ Click the **edit** button on any input cell to see the visual Field Editor!
 
 Please provide your information:
 
-<form type="dsl">
-fullName: text | Full Name | required, minLength=2, maxLength=100, placeholder="Enter your name"
-email: text | Email Address | required, placeholder="you@example.com", pattern="^[^@]+@[^@]+\.[^@]+$"
-age: number | Age | min=18, max=120, placeholder="Your age"
-bio: textarea | Short Bio | rows=4, placeholder="Tell us about yourself..."
+<form type="json">
+{
+  "fields": [
+    {
+      "name": "fullName",
+      "type": "text",
+      "label": "Full Name",
+      "required": true,
+      "placeholder": "Enter your name",
+      "validation": { "minLength": 2, "maxLength": 100 }
+    },
+    {
+      "name": "email",
+      "type": "text",
+      "label": "Email Address",
+      "required": true,
+      "placeholder": "you@example.com",
+      "validation": { "pattern": "^[^@]+@[^@]+\\.[^@]+$" }
+    },
+    {
+      "name": "age",
+      "type": "number",
+      "label": "Age",
+      "placeholder": "Your age",
+      "validation": { "min": 18, "max": 120 }
+    },
+    {
+      "name": "bio",
+      "type": "textarea",
+      "label": "Short Bio",
+      "rows": 4,
+      "placeholder": "Tell us about yourself..."
+    }
+  ]
+}
 </form>
 </input>
 
@@ -38,11 +68,56 @@ bio: textarea | Short Bio | rows=4, placeholder="Tell us about yourself..."
 
 Configure your preferences:
 
-<form type="dsl">
-theme: select[light,dark,auto] | Theme | required, default=light
-notifications: checkbox | Enable Notifications | default=true, description="Receive updates about your tasks"
-language: radio[en,es,fr,de] | Preferred Language | required, default=en
-features: multiselect[analytics,reports,api,webhooks] | Features to Enable | minItems=1, maxItems=3, description="Select all features you want to use"
+<form type="json">
+{
+  "fields": [
+    {
+      "name": "theme",
+      "type": "select",
+      "label": "Theme",
+      "required": true,
+      "default": "light",
+      "options": [
+        { "value": "light", "label": "Light" },
+        { "value": "dark", "label": "Dark" },
+        { "value": "auto", "label": "Auto" }
+      ]
+    },
+    {
+      "name": "notifications",
+      "type": "checkbox",
+      "label": "Enable Notifications",
+      "default": true,
+      "description": "Receive updates about your tasks"
+    },
+    {
+      "name": "language",
+      "type": "radio",
+      "label": "Preferred Language",
+      "required": true,
+      "default": "en",
+      "options": [
+        { "value": "en", "label": "English" },
+        { "value": "es", "label": "Spanish" },
+        { "value": "fr", "label": "French" },
+        { "value": "de", "label": "German" }
+      ]
+    },
+    {
+      "name": "features",
+      "type": "multiselect",
+      "label": "Features to Enable",
+      "description": "Select all features you want to use",
+      "options": [
+        { "value": "analytics", "label": "Analytics" },
+        { "value": "reports", "label": "Reports" },
+        { "value": "api", "label": "API" },
+        { "value": "webhooks", "label": "Webhooks" }
+      ],
+      "validation": { "minItems": 1, "maxItems": 3 }
+    }
+  ]
+}
 </form>
 </input>
 
@@ -63,10 +138,43 @@ Create a summary document showing what was collected.
 
 Select a stock to check:
 
-<form type="dsl">
-ticker: select[NVDA,GOOGL,AAPL,MSFT] | Stock Ticker | required
-timeframe: radio[1d,1w,1m,1y] | Time Period | required, default=1d
-includeChart: checkbox | Generate Price Chart | default=true, description="Create an SVG visualization of the price history"
+<form type="json">
+{
+  "fields": [
+    {
+      "name": "ticker",
+      "type": "select",
+      "label": "Stock Ticker",
+      "required": true,
+      "options": [
+        { "value": "NVDA", "label": "NVDA" },
+        { "value": "GOOGL", "label": "GOOGL" },
+        { "value": "AAPL", "label": "AAPL" },
+        { "value": "MSFT", "label": "MSFT" }
+      ]
+    },
+    {
+      "name": "timeframe",
+      "type": "radio",
+      "label": "Time Period",
+      "required": true,
+      "default": "1d",
+      "options": [
+        { "value": "1d", "label": "1 Day" },
+        { "value": "1w", "label": "1 Week" },
+        { "value": "1m", "label": "1 Month" },
+        { "value": "1y", "label": "1 Year" }
+      ]
+    },
+    {
+      "name": "includeChart",
+      "type": "checkbox",
+      "label": "Generate Price Chart",
+      "default": true,
+      "description": "Create an SVG visualization of the price history"
+    }
+  ]
+}
 </form>
 </input>
 

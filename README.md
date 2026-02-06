@@ -2,6 +2,8 @@
 
 **The workflow development environment for AI agents.**
 
+![AnyT Notebook Demo](media/demo.gif)
+
 AI agents are powerful, but they work like chatbots -- you give them a prompt, hope they get everything right in one shot, and when things break halfway through, you start over. AnyT Notebook changes this. It gives AI agents a **workflow layer**: visible steps, human checkpoints, and recoverable state -- so complex, multi-step tasks actually work.
 
 ## The Problem
@@ -152,7 +154,7 @@ During development, add break cells between steps to inspect outputs. Once the w
 
 - [Product Overview](docs/PRODUCT.md) -- Detailed introduction to AnyT Notebook
 - [User Guide](docs/USER_GUIDE.md) -- Complete guide to using AnyT Notebook
-- [File Format Specification](docs/FILE_FORMAT.md) -- Detailed `.anyt.md` format reference
+- [File Format Specification](docs/spec-v2.0.md) -- Detailed `.anyt.md` format reference
 - [Examples](examples/) -- Sample notebooks to get you started
 
 ## Configuration
