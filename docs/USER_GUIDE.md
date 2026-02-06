@@ -25,28 +25,26 @@ This guide covers everything you need to know to create and run AI-powered workf
 
 ### Creating Your First Notebook
 
-1. **Create a new file** with `.anyt.md` extension
-2. **Add frontmatter** to configure your notebook:
+**Option A: Start from a sample**
 
-```yaml
----
-schema: "2.0"
-name: my-notebook
-workdir: output
----
-```
+1. Open Command Palette (`Cmd+Shift+P` / `Ctrl+Shift+P`)
+2. Run **"AnyT: Open Sample Notebook"**
+3. Pick a sample (Hello World is a good start)
+4. Click **Run** to execute
 
-3. **Add a title** matching the `name` field:
+**Option B: Create from scratch**
 
-```markdown
-# my-notebook
-```
-
-4. **Add cells** to define your workflow steps
+1. Open Command Palette (`Cmd+Shift+P` / `Ctrl+Shift+P`)
+2. Run **"AnyT: New Notebook"**
+3. The notebook editor opens with an empty canvas
+4. Click **+ Task**, **+ Shell**, **+ Input**, **+ Break**, or **+ Note** in the toolbar to add cells
+5. Type your instructions directly into each cell
+6. Select your AI runtime from the toolbar dropdown (Claude Code or Codex)
+7. Click **Run** to execute the notebook step by step
 
 ### Understanding the Workdir
 
-The `workdir` setting specifies where AI-generated files will be created. This keeps your project organized:
+The `workdir` setting in the notebook frontmatter specifies where AI-generated files will be created. This keeps your project organized:
 
 - **Relative path**: `workdir: output` creates `./output/` relative to your `.anyt.md` file
 - **Absolute path**: `workdir: /tmp/my-project` uses an absolute location
@@ -63,7 +61,7 @@ The top toolbar provides quick actions:
 - **Run Selected**: Run only the currently selected cell
 - **Stop**: Pause execution
 - **Reset**: Clear all execution state and start fresh
-- **Add Cell**: Insert a new cell (dropdown with cell types)
+- **Add Cell**: Insert a new cell (dropdown with all five cell types)
 
 ### Runtime Selector
 
@@ -93,20 +91,7 @@ Each cell shows:
 
 ### Task Cells
 
-Task cells are executed by AI agents. Write clear, specific instructions:
-
-```xml
-<task id="create-api">
-Create a REST API endpoint for user authentication.
-
-Requirements:
-- POST /api/auth/login accepts email and password
-- Returns JWT token on success
-- Validates input and returns appropriate errors
-
-**Output:** src/api/auth.ts
-</task>
-```
+Task cells are executed by your AI agent (Claude Code or Codex). Write clear, specific instructions describing what you want the agent to accomplish.
 
 **Tips for effective tasks:**
 
@@ -115,75 +100,44 @@ Requirements:
 - Specify expected output files with `**Output:**`
 - Break complex tasks into smaller steps
 
+> *Example: "Create a REST API endpoint for user authentication. POST /api/auth/login accepts email and password, returns JWT token on success, validates input and returns appropriate errors. **Output:** src/api/auth.ts"*
+
 ### Shell Cells
 
-Shell cells execute scripts directly without AI interpretation:
-
-```xml
-<shell id="install-deps">
-#!/bin/bash
-npm install express jsonwebtoken bcrypt
-npm run build
-</shell>
-```
+Shell cells run scripts directly -- no AI involved. They're fast, deterministic, and ideal for commands you already know.
 
 **Use cases:**
 
 - Installing dependencies
 - Running build commands
 - Setting up directory structures
-- Executing existing scripts
+- Executing tests and linters
+
+> *Example: `npm install express jsonwebtoken bcrypt && npm run build`*
 
 ### Input Cells
 
-Input cells pause the notebook and wait for user interaction:
+Input cells pause the notebook and present a form to the user. Use them to collect configuration values, choose between options, or supply information that downstream cells need.
 
-```xml
-<input id="review-code">
-## Code Review Checkpoint
+Input cells can include structured forms for richer interaction. See [Form-Based Inputs](#form-based-inputs).
 
-Please review the generated authentication code in `src/api/auth.ts`.
-
-**Checklist:**
-- [ ] Security best practices followed
-- [ ] Error handling is comprehensive
-- [ ] Code is well-documented
-</input>
-```
-
-Input cells can also include structured forms. See [Form-Based Inputs](#form-based-inputs).
+> *Example: "Choose deployment target" with a dropdown for staging vs. production.*
 
 ### Note Cells
 
-Note cells provide documentation and auto-complete when reached:
+Note cells are markdown documentation checkpoints. They auto-complete instantly when reached and serve as section headers, context annotations, or progress markers.
 
-```xml
-<note id="phase-1-complete">
-## Phase 1: Setup Complete
-
-The following has been accomplished:
-- Project structure created
-- Dependencies installed
-- Basic configuration set up
-
-Proceeding to Phase 2: Implementation
-</note>
-```
+> *Example: A section header like "Phase 2: Testing and Validation" to organize your notebook into logical sections.*
 
 ### Break Cells
 
-Break cells pause execution until you explicitly continue:
+Break cells pause execution so you can review what's happened so far. Inspect outputs, verify results, then click Continue when ready.
 
-```xml
-<break id="manual-verification">
-Please manually verify the deployment at https://staging.example.com
-before proceeding to production deployment.
-</break>
-```
+> *Example: "Review the generated project structure before adding API routes."*
 
 ## Notebook Inputs
 
-Define variables in frontmatter that can be referenced in tasks:
+Define variables in the notebook frontmatter that can be referenced in tasks:
 
 ```yaml
 ---
@@ -226,46 +180,7 @@ When a notebook pauses (at input or break cells), click "Continue" to proceed.
 
 ## Form-Based Inputs
 
-Input cells can include a `<form type="json">` block for structured data collection:
-
-```xml
-<input id="config-form">
-## Configuration
-
-Please configure the deployment settings:
-
-<form type="json">
-{
-  "fields": [
-    {
-      "name": "environment",
-      "type": "select",
-      "label": "Target Environment",
-      "required": true,
-      "options": [
-        { "value": "dev", "label": "Development" },
-        { "value": "staging", "label": "Staging" },
-        { "value": "prod", "label": "Production" }
-      ]
-    },
-    {
-      "name": "replicas",
-      "type": "number",
-      "label": "Number of Replicas",
-      "default": 3,
-      "validation": { "min": 1, "max": 10 }
-    },
-    {
-      "name": "enableMonitoring",
-      "type": "checkbox",
-      "label": "Enable Monitoring",
-      "default": true
-    }
-  ]
-}
-</form>
-</input>
-```
+Input cells can include a `<form type="json">` block for structured data collection. When the notebook reaches an input cell with a form, it renders interactive fields and waits for the user to submit.
 
 ### Field Types
 
@@ -305,6 +220,49 @@ Please configure the deployment settings:
 | `max` | number | `{ "max": 65535 }` |
 | `minItems` | multiselect | `{ "minItems": 1 }` |
 | `maxItems` | multiselect | `{ "maxItems": 3 }` |
+
+### Form Syntax Reference
+
+Forms are defined inside input cells using a `<form type="json">` block. Here's the file-format syntax for reference:
+
+```xml
+<input id="config-form">
+## Configuration
+
+Please configure the deployment settings:
+
+<form type="json">
+{
+  "fields": [
+    {
+      "name": "environment",
+      "type": "select",
+      "label": "Target Environment",
+      "required": true,
+      "options": [
+        { "value": "dev", "label": "Development" },
+        { "value": "staging", "label": "Staging" },
+        { "value": "prod", "label": "Production" }
+      ]
+    },
+    {
+      "name": "replicas",
+      "type": "number",
+      "label": "Number of Replicas",
+      "default": 3,
+      "validation": { "min": 1, "max": 10 }
+    },
+    {
+      "name": "enableMonitoring",
+      "type": "checkbox",
+      "label": "Enable Monitoring",
+      "default": true
+    }
+  ]
+}
+</form>
+</input>
+```
 
 ### Complete Form Example
 
@@ -375,21 +333,26 @@ Please configure the deployment settings:
 
 ## Workflow Development Lifecycle
 
-AnyT Notebook treats AI workflows like code -- they go through a development lifecycle:
+AnyT Notebook treats AI workflows like code -- build, test, and refine them iteratively:
 
 ### Phase 1: Create
-Write the initial cells. Think about what needs to happen, in what order. What should the AI do? What can a shell script handle? Where does the human need to decide?
+
+Add cells visually using the toolbar buttons. Think about what needs to happen, in what order. What should the AI do? What can a shell script handle? Where does the human need to decide?
 
 ### Phase 2: Debug
+
 Add break cells liberally -- after every AI task if you want. Run the notebook. At each breakpoint, inspect the output. Did the AI do what you expected?
 
 ### Phase 3: Iterate
+
 Some steps will fail. Edit the task description to be clearer. Add a shell cell to install a missing dependency. Insert an input cell where you need human choice. Split a task that's too big into two.
 
 ### Phase 4: Harden
+
 The workflow works. Remove unnecessary breakpoints. Keep only the ones at critical review points. The workflow runs with minimal human intervention.
 
 ### Phase 5: Share
+
 Check the `.anyt.md` file into git. Share it with teammates. They get a debugged, proven workflow they can understand and run.
 
 ## Best Practices

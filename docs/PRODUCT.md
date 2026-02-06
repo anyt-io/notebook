@@ -18,7 +18,7 @@ The insight behind AnyT Notebook is simple:
 
 > Complex AI work needs the same things complex human work needs: a plan you can see, steps you can control, and checkpoints where you verify before moving forward.
 
-AnyT Notebook is a VS Code extension that provides a Jupyter-style notebook interface for AI agent workflows. Instead of a single prompt, you write a sequence of **cells** -- each one a discrete step that can be an AI task, a shell script, a user input form, a documentation note, or a pause point. The notebook executes cells in order, and you control where the human gets involved.
+AnyT Notebook is a VS Code extension that provides a Jupyter-style notebook interface for AI agent workflows. Instead of a single prompt, you build a sequence of **cells** visually -- each one a discrete step that can be an AI task, a shell script, a user input form, a documentation note, or a pause point. The notebook executes cells in order, and you control where the human gets involved.
 
 ## The Problem in Detail
 
@@ -57,67 +57,15 @@ AI agent workflows need the same thing. Not a chatbot. A **workflow tool**.
 
 ### The Notebook
 
-An AnyT notebook is a `.anyt.md` file -- a plain-text, version-controllable document that defines a sequence of cells. Each cell has a type, an ID, and content:
+An AnyT notebook is a visual interface in VS Code. You create a notebook, add cells by clicking buttons in the toolbar, type instructions into each cell, and run the workflow. Behind the scenes, the notebook is stored as a `.anyt.md` file -- a plain-text, version-controllable document -- but you interact with it entirely through the visual editor.
 
-```yaml
----
-schema: "2.0"
-name: project-setup
-workdir: my-project
----
-
-# Project Setup
-
-<task id="scaffold">
-Create a new Next.js project with TypeScript, Tailwind CSS, and ESLint.
-</task>
-
-<break id="review-scaffold">
-Review the project structure. Check package.json, tsconfig, and folder layout.
-</break>
-
-<task id="auth">
-Add NextAuth.js with GitHub OAuth provider. Create login/logout pages.
-</task>
-
-<input id="db-choice">
-Which database do you want to use?
-
-<form type="json">
-{
-  "fields": [
-    {
-      "name": "database",
-      "type": "select",
-      "label": "Database",
-      "options": ["PostgreSQL", "MySQL", "SQLite"],
-      "default": "PostgreSQL"
-    }
-  ]
-}
-</form>
-</input>
-
-<task id="database">
-Set up Prisma ORM with the selected database. Create User and Session models.
-</task>
-
-<shell id="migrate">
-cd my-project && npx prisma migrate dev --name init
-</shell>
-
-<shell id="test">
-cd my-project && npm test
-</shell>
-```
-
-This notebook tells you exactly what will happen, in what order, and where the human gets involved -- before anything runs.
+The notebook shows you every step, in order, before anything runs. You can see the full plan, rearrange steps, add checkpoints, and then execute with confidence.
 
 ### Five Cell Types
 
 AnyT Notebook provides five cell types, each serving a distinct role in the workflow:
 
-**Task Cells** -- The AI does the work. You write a natural language instruction, and the AI agent (Claude Code, Codex) executes it. The agent can read files, write code, run commands -- whatever's needed to fulfill the instruction. Output is streamed in real-time so you can watch progress.
+**Task Cells** -- The AI does the work. You write a natural language instruction, and the AI agent (Claude Code or Codex) executes it. The agent can read files, write code, run commands -- whatever's needed to fulfill the instruction. Output is streamed in real-time so you can watch progress.
 
 **Shell Cells** -- Deterministic execution. You write a shell script, and it runs directly -- no AI involved. Fast, predictable, and cheap. Use these for installation, building, testing, deployment, or any step where you know exactly what command to run.
 
@@ -126,6 +74,17 @@ AnyT Notebook provides five cell types, each serving a distinct role in the work
 **Note Cells** -- Documentation and progress markers. Markdown content that auto-completes when reached during execution. Use these to document sections of the workflow, provide context for the next steps, or mark milestones.
 
 **Break Cells** -- Human review gates. The workflow pauses and waits for the user to click "Continue." Use these after critical steps where the human should inspect outputs before the workflow proceeds. Think of them as breakpoints in a debugger.
+
+### Supported Runtimes
+
+AnyT Notebook works with multiple AI runtimes:
+
+| Runtime | Status | Notes |
+|---------|--------|-------|
+| **Claude Code** | Primary | Full support with streaming output |
+| **Codex** | Supported | Full support with JSON output |
+
+Select your runtime from the dropdown in the notebook toolbar. Switch between runtimes at any time.
 
 ### Execution Model
 
@@ -140,7 +99,7 @@ Cells execute sequentially from top to bottom:
 All execution state is stored in folders (`{workdir}/.anyt/cells/{cell-id}/`), separate from the notebook file. This means:
 - The notebook file stays clean (just structure, no runtime data)
 - State persists across VS Code sessions
-- You can reset all state by deleting the `.anyt/` folder
+- You can reset all state with the Reset button
 - State is inspectable -- just look at the files
 
 ## The Workflow Development Lifecycle
@@ -149,9 +108,9 @@ This is where AnyT Notebook fundamentally differs from every other AI tool. It t
 
 ### Phase 1: Create
 
-You start by writing cells. Think about what needs to happen, in what order. What should the AI do? What can a shell script handle? Where does the human need to make a decision?
+Add cells visually using the toolbar buttons. Think about what needs to happen, in what order. What should the AI do? What can a shell script handle? Where does the human need to make a decision?
 
-You don't need to get it perfect. Just write the rough sequence.
+You don't need to get it perfect. Just build the rough sequence.
 
 ### Phase 2: Debug
 
@@ -222,7 +181,7 @@ The notebook file (`.anyt.md`) stores only the **structure**: cell IDs, types, a
 
 - Notebook files are clean and diffable
 - Multiple people can share the same notebook without state conflicts
-- Resetting is as simple as deleting folders
+- Resetting is as simple as clicking Reset in the toolbar
 - State is transparent -- every output is a readable file on disk
 
 ### AI Runtime Abstraction
@@ -240,13 +199,11 @@ AnyT Notebook doesn't implement its own AI. It orchestrates existing AI agents (
 ## Getting Started
 
 1. Install AnyT Notebook from the VS Code Marketplace
-2. Create a `.anyt.md` file
-3. Write a few task and shell cells
-4. Add break cells between steps
-5. Select an AI runtime (Claude Code recommended)
-6. Hit Run and step through your workflow
-7. Iterate until it works
+2. Open a sample notebook (`Cmd+Shift+P` -> "AnyT: Open Sample Notebook")
+3. Click Run and step through the workflow
+4. Create your own notebook (`Cmd+Shift+P` -> "AnyT: New Notebook")
+5. Add cells using the toolbar buttons
+6. Insert break cells between steps to inspect outputs
+7. Iterate until the workflow works
 8. Remove unnecessary breakpoints
-9. Share the notebook with your team
-
-For the file format reference, see [spec-v2.0.md](spec-v2.0.md).
+9. Share the `.anyt.md` file with your team

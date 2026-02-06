@@ -2,93 +2,31 @@
 
 **The workflow development environment for AI agents.**
 
+AI agents are powerful, but they work like chatbots -- you give them a prompt, hope they get everything right in one shot, and when things break halfway through, you start over. AnyT Notebook changes this. It gives AI agents a **workflow layer**: visible steps, human checkpoints, and recoverable state.
+
 ![AnyT Notebook Demo](media/demo.gif)
-
-AI agents are powerful, but they work like chatbots -- you give them a prompt, hope they get everything right in one shot, and when things break halfway through, you start over. AnyT Notebook changes this. It gives AI agents a **workflow layer**: visible steps, human checkpoints, and recoverable state -- so complex, multi-step tasks actually work.
-
-## The Problem
-
-When you ask an AI agent to do something complex -- set up a project, run a migration pipeline, build a feature with multiple dependencies -- the one-shot chatbot model falls apart:
-
-- **No visibility** -- You can't see what the agent plans to do before it runs
-- **No control** -- You can't pause, review, or redirect mid-execution
-- **No recovery** -- If step 4 of 8 fails, you redo everything from scratch
-- **No separation** -- AI handles things that a simple shell command could do faster and more reliably
-
-## The Solution
-
-AnyT Notebook is a VS Code extension that brings a Jupyter-style notebook interface for AI agent workflows. You break complex tasks into discrete cells, add human review checkpoints where they matter, mix AI and deterministic steps, and run the whole thing with full visibility and control.
-
-```yaml
----
-schema: "2.0"
-name: deploy-pipeline
-workdir: output
----
-
-# Deploy Pipeline
-
-<shell id="install">
-npm install && npm run build
-</shell>
-
-<task id="generate-config">
-Generate deployment configuration based on the project structure.
-</task>
-
-<break id="review">
-Review the generated config before deploying.
-</break>
-
-<task id="deploy">
-Deploy the application using the generated configuration.
-</task>
-```
-
-**This is not a prompt.** It's a workflow program -- visible, controllable, debuggable, shareable.
 
 ## Why AnyT Notebook
 
-### Visibility -- See the Full Plan Before Anything Runs
-A notebook is an ordered list of steps. Before you hit "Run", you can see exactly what will happen: step 1, step 2, step 3. No more hoping the AI figures out the right sequence.
+When you ask an AI agent to do something complex, the one-shot chatbot model falls apart:
 
-### Controllability -- Human Decides Where to Intervene
-Break cells and input cells let you insert **human review gates** at exactly the right points. Not every step needs review -- but the critical ones should have a human checkpoint.
+- **No visibility** -- You can't see the plan before it runs
+- **No control** -- You can't pause, review, or redirect mid-execution
+- **No recovery** -- If step 4 of 8 fails, you redo everything
+- **No separation** -- AI handles things a simple shell command could do faster
 
-### Recoverability -- When Things Break, You Don't Start Over
-If step 4 fails, you fix step 4 and re-run from there. Steps 1-3's results are intact. Folder-based state persistence means no work is lost.
+AnyT Notebook solves this with a Jupyter-style notebook for AI agent workflows. Break tasks into cells, add human checkpoints, mix AI and shell scripts, and run with full control.
 
-### Composability -- Mix AI and Deterministic Steps
-Not everything needs an AI agent. `npm install` doesn't need AI. Shell cells let you use the **right tool for each step**: AI for creative/complex tasks, shell scripts for deterministic/efficient ones.
+## Supported Runtimes
 
-### Adaptability -- Modify the Plan Mid-Execution
-After reviewing step 3's output, you realize you need an extra step. Add a cell in the middle. Remove one that's no longer needed. The workflow evolves as you learn.
+AnyT Notebook works with multiple AI runtimes:
 
-## Workflow Development Lifecycle
+| Runtime | Status | Notes |
+|---------|--------|-------|
+| **Claude Code** | Primary | Full support with streaming output |
+| **Codex** | Supported | Full support with JSON output |
 
-AnyT Notebook treats AI workflows like code -- they go through a development lifecycle:
-
-| Phase | What You Do |
-|-------|-------------|
-| **Create** | Write cells: tasks for AI, shell for scripts, notes for documentation |
-| **Debug** | Add break cells and input cells as checkpoints, run step by step |
-| **Iterate** | Review outputs, fix failing steps, add/remove cells as needed |
-| **Harden** | Remove breakpoints when confident, let the workflow run end-to-end |
-| **Share** | Version the `.anyt.md` file, share a debugged workflow with your team |
-
-This is the same cycle as software development: write code, add breakpoints, step through, fix bugs, remove breakpoints, deploy. **AnyT Notebook brings this discipline to AI agent workflows.**
-
-## Cell Types
-
-Five cell types for complete workflow control:
-
-| Cell | Purpose | Example |
-|------|---------|---------|
-| **Task** | AI agent executes a natural language instruction | "Generate API endpoints based on the database schema" |
-| **Shell** | Run shell scripts directly -- fast, deterministic, no AI overhead | `npm install && npm run build` |
-| **Input** | Pause for user input with forms (text, select, checkbox) | "Choose deployment target: staging or production" |
-| **Note** | Markdown documentation that marks progress checkpoints | Section headers, context for the next steps |
-| **Break** | Pause execution for human review before continuing | "Review generated files before deploying" |
+Select your runtime from the dropdown in the notebook toolbar. Switch between runtimes at any time.
 
 ## Installation
 
@@ -108,76 +46,111 @@ Five cell types for complete workflow control:
 
 ## Quick Start
 
-1. Create a new file with `.anyt.md` extension
-2. The AnyT Notebook editor opens automatically
-3. Write your workflow:
+**1. Try a Sample** -- `Cmd+Shift+P` -> "AnyT: Open Sample Notebook" -> pick one -> click Run
 
-```yaml
+**2. Or Create Your Own:**
+- `Cmd+Shift+P` -> "AnyT: New Notebook"
+- Click **+ Task**, **+ Shell**, **+ Input**, **+ Break**, or **+ Note** to add cells
+- Type your instructions directly into each cell
+- Click **Run** to execute the notebook step by step
+
 ---
-schema: "2.0"
-name: my-first-notebook
-workdir: output
+
+## Cell Types
+
+AnyT Notebook provides five cell types. Mix and match them to build workflows that combine AI execution, automation, and human oversight.
+
+### Task
+
+Task cells are executed by your AI agent (Claude Code or Codex). Write a natural language instruction and the agent carries it out. Use tasks for anything that requires reasoning, code generation, or multi-file changes.
+
+> *Example: "Create a REST API with Express.js and TypeScript, including user authentication routes."*
+
+### Shell
+
+Shell cells run scripts directly -- no AI involved. They're fast, deterministic, and ideal for commands you already know. Use them for installs, builds, tests, linting, or any CLI operation.
+
+> *Example: `npm install && npm run build && npm test`*
+
+### Input
+
+Input cells pause execution and present a form to the user. Use them to collect configuration values, choose between options, or supply information that downstream cells need. Form responses are available to subsequent cells.
+
+> *Example: "Choose deployment target" with a dropdown for staging vs. production.*
+
+### Note
+
+Note cells are markdown documentation checkpoints. They auto-complete instantly when reached and serve as section headers, context annotations, or progress markers in your workflow.
+
+> *Example: A section header like "Phase 2: Testing and Validation" to organize your notebook.*
+
+### Break
+
+Break cells pause execution so you can review what's happened so far. Inspect outputs, verify results, then click Continue when ready. Add breaks liberally while developing a workflow; remove them once you're confident it runs end-to-end.
+
+> *Example: "Review the generated project structure before adding API routes."*
+
 ---
 
-# My First Notebook
+## Workflow Development Lifecycle
 
-<task id="scaffold">
-Create a new Express.js project with TypeScript configuration.
-</task>
+AnyT Notebook treats AI workflows like code -- build, test, and refine them iteratively:
 
-<break id="review-scaffold">
-Review the project structure before continuing.
-</break>
+1. **Create** -- Add cells visually: tasks for AI work, shell for scripts, inputs for user decisions, notes for documentation
+2. **Debug** -- Insert break cells as checkpoints and run step by step to inspect each output
+3. **Iterate** -- Review results, fix failing steps, reorder or add cells as needed
+4. **Harden** -- Remove breakpoints once confident and run the full workflow end-to-end
+5. **Share** -- Version the `.anyt.md` file and share with your team
 
-<task id="add-routes">
-Add REST API routes for user CRUD operations.
-</task>
+This is the same cycle as software development: write code, add breakpoints, step through, fix bugs, remove breakpoints, deploy. **AnyT Notebook brings this discipline to AI agent workflows.**
 
-<shell id="test">
-npm test
-</shell>
-```
+---
 
-4. Select your AI runtime (Claude Code recommended)
-5. Click "Run" to execute the notebook
+## Sample Notebooks
 
-During development, add break cells between steps to inspect outputs. Once the workflow is proven, remove them and let it run end-to-end.
+| Sample | What it does |
+|--------|--------------|
+| **Hello World** | Simplest notebook -- one task, instant result |
+| **Web Scraper** | Scrape, review, parse, validate -- with human checkpoints |
+| **Form Demo** | All form field types for user input |
+| **Product Video** | Full video pipeline with Remotion, voiceover, and subtitles |
 
-## Supported AI Runtimes
+Open Command Palette -> **"AnyT: Open Sample Notebook"** -> pick one -> click Run.
 
-| Runtime | Status | Notes |
-|---------|--------|-------|
-| Claude Code | Primary | Full support with streaming output |
-| Codex | Supported | Full support with JSON output |
-
-## Documentation
-
-- [Product Overview](docs/PRODUCT.md) -- Detailed introduction to AnyT Notebook
-- [User Guide](docs/USER_GUIDE.md) -- Complete guide to using AnyT Notebook
-- [File Format Specification](docs/spec-v2.0.md) -- Detailed `.anyt.md` format reference
-- [Examples](examples/) -- Sample notebooks to get you started
+---
 
 ## Configuration
 
 | Setting | Default | Description |
 |---------|---------|-------------|
-| `anyt.agent` | `"claude"` | AI agent to use (`claude`, `codex`) |
-| `anyt.autoVersion` | `true` | Automatically create versions on changes |
+| `anyt.agent` | `"claude"` | AI agent (`claude` or `codex`) |
+| `anyt.autoVersion` | `true` | Auto-version on changes |
+
+---
 
 ## Commands
 
-| Command | Description |
-|---------|-------------|
-| `AnyT: New Notebook` | Create a new .anyt.md notebook |
-| `AnyT: Run Notebook` | Run all cells from beginning |
-| `AnyT: Run Task` | Run a single cell |
-| `AnyT: Add Task` | Add a new task cell |
-| `AnyT: Add Shell Cell` | Add a new shell cell |
-| `AnyT: Add Input Cell` | Add a new input cell |
-| `AnyT: Add Note Cell` | Add a new note cell |
-| `AnyT: Pause Execution` | Stop current execution |
-| `AnyT: Reset Notebook` | Clear all cell execution state |
-| `AnyT: Export to Script` | Export notebook as shell script |
+| Command | What it does |
+|---------|--------------|
+| `AnyT: New Notebook` | Create a fresh `.anyt.md` file |
+| `AnyT: Open Sample Notebook` | Browse and open built-in sample notebooks |
+
+All other actions (run, stop, reset, add cells) are available directly from the notebook toolbar.
+
+---
+
+## Requirements
+
+- **Claude Code CLI** installed and authenticated ([install guide](https://docs.anthropic.com/en/docs/claude-code)) or **Codex CLI** installed
+- VS Code 1.85+
+
+---
+
+## Documentation
+
+- [Product Overview](docs/PRODUCT.md) -- Detailed introduction to AnyT Notebook
+- [User Guide](docs/USER_GUIDE.md) -- Complete guide to using AnyT Notebook
+- [Examples](examples/) -- Sample notebooks to get you started
 
 ## Links
 
