@@ -38,7 +38,7 @@ This guide covers everything you need to know to create and run AI-powered workf
 2. Run **"AnyT: New Notebook"**
 3. The notebook editor opens with an empty canvas
 4. Click **+ Task**, **+ Shell**, **+ Input**, **+ Break**, or **+ Note** in the toolbar to add cells
-5. Type your instructions directly into each cell
+5. Edit cells with the rich text editor (supports bold, italic, headings, lists, and code blocks with syntax highlighting) or switch to the Markdown tab for raw editing
 6. Select your AI runtime from the toolbar dropdown (Claude Code or Codex)
 7. Click **Run** to execute the notebook step by step
 

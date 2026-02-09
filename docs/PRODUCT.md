@@ -57,7 +57,7 @@ AI agent workflows need the same thing. Not a chatbot. A **workflow tool**.
 
 ### The Notebook
 
-An AnyT notebook is a visual interface in VS Code. You create a notebook, add cells by clicking buttons in the toolbar, type instructions into each cell, and run the workflow. Behind the scenes, the notebook is stored as a `.anyt.md` file -- a plain-text, version-controllable document -- but you interact with it entirely through the visual editor.
+An AnyT notebook is a visual interface in VS Code. You create a notebook, add cells by clicking buttons in the toolbar, and edit each cell with a rich text editor featuring code blocks with syntax highlighting, formatting toolbar, and a markdown toggle. Behind the scenes, the notebook is stored as a `.anyt.md` file -- a plain-text, version-controllable document -- but you interact with it entirely through the visual editor.
 
 The notebook shows you every step, in order, before anything runs. You can see the full plan, rearrange steps, add checkpoints, and then execute with confidence.
 
