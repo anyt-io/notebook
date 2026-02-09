@@ -51,7 +51,28 @@ Frontmatter MUST be enclosed between two `---` lines at the very start of the fi
 | `version` | string | No | — | Semantic version (e.g. `"1.0.0"`) |
 | `workdir` | string | No | `"anyt_workspace"` | Execution directory (relative to `.anyt.md` file or absolute) |
 | `inputs` | object | No | `{}` | Key-value pairs available to all cells as context |
+| `env_file` | string | No | `".env"` | Path to .env file (relative to notebook or absolute) |
 | `dependencies` | object | No | — | Skill dependencies as `name: version` pairs |
+
+### Working Directory
+
+The `workdir` field sets the current working directory for all cell execution. All file paths in shell scripts and task descriptions should be **relative to workdir**, not include the workdir name.
+
+```yaml
+workdir: my-project
+```
+
+**Correct usage** (paths relative to workdir):
+```bash
+mkdir -p src docs        # Creates my-project/src, my-project/docs
+cat config.json          # Reads my-project/config.json
+```
+
+**Incorrect usage** (creates nested folders):
+```bash
+mkdir -p my-project/src  # Wrong! Creates my-project/my-project/src
+cat my-project/config.json  # Wrong! Looks for my-project/my-project/config.json
+```
 
 ### Input Values
 
@@ -83,6 +104,35 @@ workdir: output
 ---
 ```
 
+### Environment Variables
+
+The `env_file` field specifies a path to an environment file containing secrets and configuration:
+
+```yaml
+env_file: ".env"              # Default - looks for .env in notebook directory
+env_file: "secrets/prod.env"  # Relative path from notebook directory
+env_file: "/etc/app/.env"     # Absolute path
+```
+
+> **Security Note:** Never put API keys or secrets directly in the notebook file. Always use `env_file` to reference an external `.env` file that is excluded from version control via `.gitignore`.
+
+**Environment variable priority (highest to lowest):**
+1. Notebook inputs (prefixed with `ANYT_`)
+2. `.env` file (from `env_file` or default `.env` in notebook directory)
+3. Shell profile (`~/.zshrc`, `~/.bash_profile`) - loaded via login shell
+
+**Example `.env` file** (create in notebook directory, add to `.gitignore`):
+```
+# API keys and secrets - DO NOT COMMIT
+GEMINI_API_KEY=your-api-key-here
+OPENAI_API_KEY=sk-...
+
+# Configuration
+DEBUG=true
+```
+
+Shell cells run as login shells by default, which sources your shell profile files.
+
 ### Full Frontmatter Example
 
 ```yaml
@@ -96,6 +146,7 @@ inputs:
   targetUrl: https://example.com
   outputFormat: json
   maxPages: 10
+env_file: ".env"  # Optional - defaults to .env in notebook directory
 dependencies:
   scraping-tools: "1.0.0"
 ---
