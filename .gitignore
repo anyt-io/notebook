@@ -9,6 +9,21 @@ Thumbs.db
 *.swo
 *~
 
+# Python
+.venv/
+.ruff_cache/
+__pycache__/
+*.pyc
+
+# TypeScript / Bun
+node_modules/
+
+# Skill output
+output/
+
+# Notebook workspaces
+notebooks/anyt_workspace/
+
 # Workflow outputs (when testing examples locally)
 *_output/
 *_workspace/

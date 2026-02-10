@@ -146,6 +146,26 @@ All other actions (run, stop, reset, add cells) are available directly from the 
 
 ---
 
+## Skills
+
+AnyT Notebook supports [PSPM](https://github.com/anyt-io/pspm-cli) skills — reusable prompt skill packages that extend AI coding agents with additional capabilities. This repo includes example skills in the [`skills/`](skills/) directory:
+
+| Skill | Description |
+|-------|-------------|
+| [youtube-downloader](skills/youtube-downloader/) | Download YouTube videos and transcripts in various formats and qualities |
+| [pspm-skill-creator](skills/pspm-skill-creator/) | Scaffold, validate, and package PSPM skills with isolated runtime environments |
+| [create-anyt-notebook](skills/create-anyt-notebook/) | Create new AnyT Notebook files from templates |
+
+Install a skill with PSPM:
+
+```bash
+pspm install youtube-downloader
+```
+
+See [docs/skill-development-guide.md](docs/skill-development-guide.md) for full conventions on creating new skills.
+
+---
+
 ## Documentation
 
 - [Product Overview](docs/PRODUCT.md) -- Detailed introduction to AnyT Notebook

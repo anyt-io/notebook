@@ -1,0 +1,70 @@
+name: Validate Skills
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "skills/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - "skills/**"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Validate all skills
+        working-directory: skills/pspm-skill-creator
+        run: uv run --project runtime runtime/validate_all_skills.py ../../skills
+
+  discover:
+    runs-on: ubuntu-latest
+    outputs:
+      skills: ${{ steps.find.outputs.skills }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Find Python skills with runtime/pyproject.toml
+        id: find
+        run: |
+          skills=$(ls -d skills/*/runtime/pyproject.toml 2>/dev/null \
+            | xargs -I{} dirname {} \
+            | xargs -I{} dirname {} \
+            | xargs -I{} basename {} \
+            | jq -R -s -c 'split("\n") | map(select(length > 0))')
+          echo "skills=$skills" >> "$GITHUB_OUTPUT"
+
+  lint-and-test:
+    needs: discover
+    if: ${{ needs.discover.outputs.skills != '[]' }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        skill: ${{ fromJson(needs.discover.outputs.skills) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Install dependencies
+        working-directory: skills/${{ matrix.skill }}/runtime
+        run: uv sync
+
+      - name: Lint
+        working-directory: skills/${{ matrix.skill }}/runtime
+        run: uv run ruff check .
+
+      - name: Type check
+        working-directory: skills/${{ matrix.skill }}/runtime
+        run: uv run python -m pyright .
+
+      - name: Test
+        working-directory: skills/${{ matrix.skill }}/runtime
+        run: uv run pytest tests/ -v

@@ -1,0 +1,27 @@
+{
+  "$schema": "https://pspm.dev/schema/v1/pspm.json",
+  "name": "youtube-downloader",
+  "version": "0.3.0",
+  "description": "Download youtube video, transcript, cover image, and capture screenshots",
+  "author": "Bin Sheng <supercarl87@gmail.com>",
+  "license": "Apache-2.0",
+  "type": "skill",
+  "capabilities": [
+    "Download video",
+    "Download transcript",
+    "Download cover image",
+    "Capture screenshots at timestamps"
+  ],
+  "main": "SKILL.md",
+  "requirements": {
+    "pspm": ">=0.1.0"
+  },
+  "files": [
+    "SKILL.md",
+    "runtime",
+    "scripts",
+    "data"
+  ],
+  "dependencies": {},
+  "private": false
+}
