@@ -1,0 +1,25 @@
+{
+  "$schema": "https://pspm.dev/schema/v1/pspm.json",
+  "name": "pspm-skill-creator",
+  "version": "0.1.0",
+  "description": "Create and scaffold PSPM skills with isolated runtime environments",
+  "author": "Bin Sheng <supercarl87@gmail.com>",
+  "license": "Apache-2.0",
+  "type": "skill",
+  "capabilities": [
+    "Initialize skill project",
+    "Validate skill structure",
+    "Package skill for distribution"
+  ],
+  "main": "SKILL.md",
+  "requirements": {
+    "pspm": ">=0.1.0"
+  },
+  "files": [
+    "SKILL.md",
+    "runtime",
+    "references"
+  ],
+  "dependencies": {},
+  "private": false
+}
