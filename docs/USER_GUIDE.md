@@ -7,7 +7,7 @@ This guide covers everything you need to know to create and run AI-powered workf
 - [Getting Started](#getting-started)
 - [Understanding the Interface](#understanding-the-interface)
 - [Working with Cells](#working-with-cells)
-- [Notebook Inputs](#notebook-inputs)
+- [Cell Labels](#cell-labels)
 - [Execution Modes](#execution-modes)
 - [Form-Based Inputs](#form-based-inputs)
 - [Workflow Development Lifecycle](#workflow-development-lifecycle)
@@ -135,30 +135,24 @@ Break cells pause execution so you can review what's happened so far. Inspect ou
 
 > *Example: "Review the generated project structure before adding API routes."*
 
-## Notebook Inputs
+## Cell Labels
 
-Define variables in the notebook frontmatter that can be referenced in tasks:
+Cells have a technical `id` (slug format, used for file paths and references) and an optional human-friendly `label` for display:
 
-```yaml
----
-schema: "2.0"
-name: deploy-notebook
-workdir: deployment
-inputs:
-  environment: staging
-  version: 1.2.3
-  enableDebug: true
-  maxRetries: 3
----
+```xml
+<task id="setup-env" label="Setup Environment">
+Install dependencies and configure the project.
+</task>
 ```
 
-Tasks can reference these values, and the AI will have access to them as context.
+- When a **label** is set, it's shown as the primary cell name with the ID displayed as a subtle suffix
+- When **no label** is set, the cell ID is shown as the name
+- Click a cell name to edit the label; cell IDs are read-only
 
-**Supported types:**
-
-- **string**: `environment: staging`
-- **number**: `maxRetries: 3`
-- **boolean**: `enableDebug: true`
+**Tips:**
+- Use descriptive labels so your notebook reads like a plan: "Install Dependencies", "Create API Routes", "Review Output"
+- Labels appear in both expanded and collapsed cell views
+- Labels are optional — cells work fine with just an ID
 
 ## Execution Modes
 
@@ -368,7 +362,7 @@ Check the `.anyt.md` file into git. Share it with teammates. They get a debugged
 
 1. **Use notes as section headers**: Group related tasks with note cells
 2. **Add checkpoints**: Use input/break cells at critical points
-3. **Name cells meaningfully**: Use descriptive IDs like `create-user-api` not `task-1`
+3. **Name cells meaningfully**: Use descriptive IDs like `create-user-api` not `task-1`, and add labels like "Create User API" for readability
 4. **Mix cell types**: Use shell for deterministic steps, tasks for creative AI work
 
 ### Managing State
