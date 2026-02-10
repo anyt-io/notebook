@@ -1,16 +1,33 @@
-# AnyT Notebook File Specification — Schema 2.0
+# AnyT Notebook File Specification
 
-> **Schema version**: `2.0` (current)
+> **Spec version**: `2.1`
+> **Schema version**: `2.0`
+> **Last updated**: 2026-02-10
 > **Purpose**: Complete specification for generating valid `.anyt.md` notebook files.
 > This document is designed to be consumed by AI systems as a reference for
 > creating, editing, and validating AnyT notebooks.
 
-### Schema Versions
+### Spec Versions
 
-| Version | Status | Spec | Description |
-|---------|--------|------|-------------|
-| **2.0** | **Current** | This document | Structure-only file. State in `.anyt/cells/` folders. All 5 cell types. |
-| 1.0 | Deprecated | [spec-v1.0.md](./spec-v1.0.md) | Legacy format with inline state attributes on cell tags. |
+| Spec Version | Schema Version | Date | Description |
+|--------------|----------------|------|-------------|
+| **2.1** | **2.0** | 2026-02-10 | Add `label` attribute. Cell IDs read-only in UI. |
+| 2.0 | 2.0 | 2026-02-05 | Initial schema 2.0. Structure-only file with folder-based state. |
+
+### Changelog
+
+#### 2.1 (2026-02-10)
+- **Added** optional `label` attribute on all cell types for human-friendly display names
+- **Added** validation rules 11-12 for valid attributes and label format
+- **Changed** UI behavior: label is now the primary cell name; cell ID is read-only
+- **Removed** workflow inputs feature from frontmatter
+
+#### 2.0 (2026-02-05)
+- Initial schema 2.0 specification
+- Structure-only `.anyt.md` file format — all runtime state stored in `.anyt/cells/` folders
+- Five cell types: `task`, `shell`, `input`, `note`, `break`
+- JSON-only form format for input cells
+- Shell environment variable support with `env_file` and login shell
 
 ---
 
@@ -50,9 +67,6 @@ Frontmatter MUST be enclosed between two `---` lines at the very start of the fi
 | `description` | string | No | — | Human-readable summary |
 | `version` | string | No | — | Semantic version (e.g. `"1.0.0"`) |
 | `workdir` | string | No | `"anyt_workspace"` | Execution directory (relative to `.anyt.md` file or absolute) |
-| `inputs` | object | No | `{}` | Key-value pairs available to all cells as context |
-| `env_file` | string | No | `".env"` | Path to .env file (relative to notebook or absolute) |
-| `dependencies` | object | No | — | Skill dependencies as `name: version` pairs |
 
 ### Working Directory
 
@@ -73,26 +87,8 @@ cat config.json          # Reads my-project/config.json
 mkdir -p my-project/src  # Wrong! Creates my-project/my-project/src
 cat my-project/config.json  # Wrong! Looks for my-project/my-project/config.json
 ```
-
-### Input Values
-
-Inputs support three scalar types and schema objects:
-
-```yaml
-inputs:
-  # Simple values
-  projectName: My Project        # string
-  maxRetries: 3                  # number
-  verbose: true                  # boolean
-
-  # Schema objects (with type, validation, defaults)
-  port:
-    type: number
-    required: true
-    default: 3000
-    description: Server port
-    value: 3000
-```
+| `env_file` | string | No | `".env"` | Path to .env file (relative to notebook or absolute) |
+| `dependencies` | object | No | — | Skill dependencies as `name: version` pairs |
 
 ### Minimal Valid Frontmatter
 
@@ -117,9 +113,8 @@ env_file: "/etc/app/.env"     # Absolute path
 > **Security Note:** Never put API keys or secrets directly in the notebook file. Always use `env_file` to reference an external `.env` file that is excluded from version control via `.gitignore`.
 
 **Environment variable priority (highest to lowest):**
-1. Notebook inputs (prefixed with `ANYT_`)
-2. `.env` file (from `env_file` or default `.env` in notebook directory)
-3. Shell profile (`~/.zshrc`, `~/.bash_profile`) - loaded via login shell
+1. `.env` file (from `env_file` or default `.env` in notebook directory)
+2. Shell profile (`~/.zshrc`, `~/.bash_profile`) - loaded via login shell
 
 **Example `.env` file** (create in notebook directory, add to `.gitignore`):
 ```
@@ -142,10 +137,6 @@ name: web-scraper
 description: Scrape and process website data
 version: 1.0.0
 workdir: scraper_output
-inputs:
-  targetUrl: https://example.com
-  outputFormat: json
-  maxPages: 10
 env_file: ".env"  # Optional - defaults to .env in notebook directory
 dependencies:
   scraping-tools: "1.0.0"
@@ -170,22 +161,36 @@ Cells execute sequentially from top to bottom.
 
 ### General Syntax
 
-All cells use XML-like tags with a required `id` attribute:
+All cells use XML-like tags with a required `id` attribute and an optional `label` attribute:
 
 ```xml
 <{type} id="{unique-id}">
 {content}
 </{type}>
+
+<{type} id="{unique-id}" label="{display name}">
+{content}
+</{type}>
 ```
+
+### Attributes
+
+| Attribute | Required | Description |
+|-----------|----------|-------------|
+| `id` | Yes | Unique technical identifier (slug format). Used for file paths, cross-references, and folder names. Not editable from the UI. |
+| `label` | No | Human-friendly display name. Shown as the primary cell name in the UI. Can contain spaces and mixed case. |
+
+When a `label` is set, the UI shows it as the primary name with the `id` displayed as a subtle suffix. When no label is set, the `id` is shown as the cell name.
 
 ### Rules
 
 - **Tag names**: Must be one of: `task`, `shell`, `input`, `note`, `break`
 - **`id` attribute**: Required on every cell. Must be unique across the entire notebook.
-- **ID format**: Use lowercase alphanumeric characters and hyphens (slug format). Examples: `setup-env`, `generate-report`, `review-data`
+- **ID format**: Use lowercase alphanumeric characters, hyphens, and underscores (slug format). Examples: `setup-env`, `generate-report`, `review-data`
+- **`label` attribute**: Optional on every cell. Free-form text for human display. Examples: `"Setup Environment"`, `"Generate API Report"`
 - **Content**: Everything between the opening and closing tags (trimmed of leading/trailing whitespace)
 - **No nesting**: Cell tags cannot be nested inside other cell tags
-- **No other attributes**: In schema 2.0, the only valid attribute is `id`. Do NOT include `status`, `duration`, `error`, or other runtime attributes.
+- **No runtime attributes**: Do NOT include `status`, `duration`, `error`, or other runtime attributes on cell tags.
 - **Ordering**: Cells run top-to-bottom. Place dependencies before dependents.
 - **Spacing**: Leave a blank line between cell tags for readability
 
@@ -204,6 +209,10 @@ Can span multiple lines. Markdown formatting is supported.
 
 **Output:** path/to/file1, path/to/file2
 </task>
+
+<task id="unique-id" label="Human-Friendly Name">
+Same content, but displayed with a readable label in the UI.
+</task>
 ```
 
 **Content guidelines:**
@@ -213,9 +222,9 @@ Can span multiple lines. Markdown formatting is supported.
 - Use `**Output:** file1, file2` to declare expected output files (parsed by the system)
 - Markdown formatting is preserved and passed to the AI agent
 
-**Example:**
+**Examples:**
 ```xml
-<task id="create-api">
+<task id="create-api" label="Create REST API">
 Create a REST API with the following endpoints:
 - GET /users - List all users
 - POST /users - Create a new user
@@ -249,7 +258,7 @@ command2
 
 **Example:**
 ```xml
-<shell id="setup-env">
+<shell id="setup-env" label="Install Dependencies">
 mkdir -p src tests docs
 npm init -y
 npm install express typescript @types/express
@@ -272,6 +281,10 @@ Markdown description of what input is needed.
   ]
 }
 </form>
+</input>
+
+<input id="unique-id" label="Display Name">
+Same content, but displayed with a readable label in the UI.
 </input>
 ```
 
@@ -331,7 +344,7 @@ The `<form>` block contains a JSON object with a `fields` array. Each field obje
 
 **Example:**
 ```xml
-<input id="project-config">
+<input id="project-config" label="Project Configuration">
 ## Configure Your Project
 
 Set up the initial project parameters:
@@ -421,6 +434,10 @@ A markdown documentation checkpoint. Auto-completes instantly when reached durin
 Markdown content. Used for documentation, progress markers,
 or section headers within the notebook.
 </note>
+
+<note id="unique-id" label="Display Name">
+Same content, but displayed with a readable label in the UI.
+</note>
 ```
 
 **Use cases:**
@@ -430,7 +447,7 @@ or section headers within the notebook.
 
 **Example:**
 ```xml
-<note id="phase-1-complete">
+<note id="phase-1-complete" label="Phase 1 Complete">
 ## Phase 1 Complete
 
 Generated files:
@@ -450,11 +467,15 @@ Pauses execution and waits for the user to click "Continue". Used for manual ver
 <break id="unique-id">
 Description of what the user should review before continuing.
 </break>
+
+<break id="unique-id" label="Display Name">
+Same content, but displayed with a readable label in the UI.
+</break>
 ```
 
 **Example:**
 ```xml
-<break id="verify-setup">
+<break id="verify-setup" label="Verify Setup">
 Review the project structure and configuration files before
 proceeding to add the database layer.
 </break>
@@ -555,7 +576,6 @@ Task cells can reference output from earlier cells:
 
 - **Files from previous tasks/shells**: Refer to paths relative to `workdir`
 - **Input cell responses**: Reference by input cell ID — the runtime makes form values available as context to subsequent tasks
-- **Frontmatter inputs**: Reference by key name
 
 Example of a task referencing prior context:
 ```xml
@@ -598,12 +618,12 @@ workdir: express-api
 
 # express-api
 
-<shell id="init">
+<shell id="init" label="Initialize Project">
 mkdir -p express-api
 cd express-api && npm init -y && npm install express typescript @types/express
 </shell>
 
-<task id="create-server">
+<task id="create-server" label="Create Express Server">
 Create an Express.js server with TypeScript:
 - src/app.ts with a basic Express setup
 - src/routes/health.ts with a GET /health endpoint
@@ -612,18 +632,18 @@ Create an Express.js server with TypeScript:
 **Output:** src/app.ts, src/routes/health.ts, tsconfig.json
 </task>
 
-<shell id="build">
+<shell id="build" label="Build TypeScript">
 cd express-api && npx tsc
 </shell>
 
-<task id="add-tests">
+<task id="add-tests" label="Add Tests">
 Add Vitest tests for the health endpoint:
 - Install vitest and supertest as dev dependencies
 - Create tests/health.test.ts
 - Add a "test" script to package.json
 </task>
 
-<note id="complete">
+<note id="complete" label="API Ready">
 ## API Ready
 
 - Server: `src/app.ts`
@@ -645,7 +665,7 @@ workdir: my-project
 
 # project-scaffolder
 
-<input id="config">
+<input id="config" label="Project Configuration">
 ## Project Setup
 
 Configure your new project:
@@ -699,7 +719,7 @@ Configure your new project:
 </form>
 </input>
 
-<task id="scaffold">
+<task id="scaffold" label="Scaffold Project">
 Based on the user's input from the config step, create a project:
 - package.json with the project name and description
 - src/index.ts entry point
@@ -708,22 +728,22 @@ Based on the user's input from the config step, create a project:
 - If includeAuth is true, add src/auth/ with JWT utilities
 </task>
 
-<shell id="install">
+<shell id="install" label="Install Dependencies">
 cd my-project && npm install
 </shell>
 
-<break id="review">
+<break id="review" label="Review Project">
 Review the generated project structure before adding tests.
 </break>
 
-<task id="tests">
+<task id="tests" label="Add Test Suite">
 Add a test setup:
 - Install vitest as a dev dependency
 - Create src/__tests__/index.test.ts
 - Add "test" script to package.json
 </task>
 
-<note id="done">
+<note id="done" label="Project Complete">
 ## Project Scaffolded!
 
 Run:
@@ -744,11 +764,11 @@ workdir: pipeline-output
 
 # data-pipeline
 
-<shell id="setup-dirs">
+<shell id="setup-dirs" label="Create Directories">
 mkdir -p pipeline-output/{raw,processed,reports}
 </shell>
 
-<task id="generate-data">
+<task id="generate-data" label="Generate Sample Data">
 Create a sample CSV file at pipeline-output/raw/sales.csv with:
 - Headers: date, product, quantity, price, region
 - 50 rows of realistic sales data
@@ -762,7 +782,7 @@ echo "=== Row Count ==="
 wc -l pipeline-output/raw/sales.csv
 </shell>
 
-<task id="transform">
+<task id="transform" label="Build Transform Script">
 Create pipeline-output/transform.js that:
 - Reads raw/sales.csv
 - Adds a 'total' column (quantity * price)
@@ -774,7 +794,7 @@ Create pipeline-output/transform.js that:
 cd pipeline-output && node transform.js
 </shell>
 
-<task id="analyze">
+<task id="analyze" label="Analyze Sales Data">
 Create pipeline-output/analyze.py that:
 - Reads processed/sales-clean.csv
 - Computes revenue by product and region
@@ -785,7 +805,7 @@ Create pipeline-output/analyze.py that:
 cd pipeline-output && python analyze.py
 </shell>
 
-<note id="done">
+<note id="done" label="Pipeline Complete">
 ## Pipeline Complete
 
 Files: `raw/sales.csv`, `processed/sales-clean.csv`, `reports/summary.*`
@@ -808,18 +828,6 @@ When generating a notebook, ensure:
 8. **No inline state**: Do NOT include `status`, `duration`, `error`, or `exitCode` attributes on cell tags
 9. **ID format**: Use slug-format IDs: lowercase, alphanumeric, hyphens (e.g., `setup-env`, `create-api`)
 10. **Heading**: Include `# {name}` after the frontmatter, matching the `name` field
+11. **Valid attributes**: Cell tags only accept `id` and `label` attributes. No other attributes are allowed.
+12. **Label format**: Labels are free-form text. Use human-readable names (e.g., `"Setup Environment"`, `"Generate Report"`). Labels are optional — when omitted, the cell ID is displayed as the name.
 
----
-
-## 11. Migration from Schema 1.0
-
-Schema 2.0 differs from 1.0 in these ways:
-
-| Aspect | Schema 1.0 | Schema 2.0 |
-|--------|-----------|-----------|
-| `schema` field | Optional (or absent) | Required, must be `"2.0"` |
-| Cell tag attributes | `id`, `status`, `duration`, `error`, `exitCode` | `id` only |
-| State storage | Inline in `.anyt.md` file | `.anyt/cells/` folders |
-| Cell types | `task`, `shell` | `task`, `shell`, `input`, `note`, `break` |
-
-When a 1.0 file is saved, it is automatically upgraded to 2.0 format. Inline state attributes are stripped and state moves to folder-based storage.

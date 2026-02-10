@@ -207,3 +207,5 @@ AnyT Notebook doesn't implement its own AI. It orchestrates existing AI agents (
 7. Iterate until the workflow works
 8. Remove unnecessary breakpoints
 9. Share the `.anyt.md` file with your team
+
+For the file format reference, see [anyt-notebook-spec.md](anyt-notebook-spec.md).
