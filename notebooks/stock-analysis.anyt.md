@@ -10,7 +10,7 @@ workdir: stock-analysis
 Analyzle Stock in last few days and generate visualization
 </note>
 
-<input id="input-t0jh">
+<input id="input-t0jh" label="Pick Stock">
 Select the stock to review 
 
 &nbsp;
@@ -51,7 +51,7 @@ Select the stock to review
 </form>
 </input>
 
-<task id="hello" label="Fetch Stock information">
+<task id="task-b23w" label="Fetch Stock Information">
 Fetch the stock based on user selections , store it in csv `stocks.csv`
 </task>
 
