@@ -8,6 +8,7 @@ This guide covers everything you need to know to create and run AI-powered workf
 - [Understanding the Interface](#understanding-the-interface)
 - [Working with Cells](#working-with-cells)
 - [Cell Labels](#cell-labels)
+- [Agent Profiles](#agent-profiles)
 - [Execution Modes](#execution-modes)
 - [Form-Based Inputs](#form-based-inputs)
 - [Workflow Development Lifecycle](#workflow-development-lifecycle)
@@ -153,6 +154,22 @@ Install dependencies and configure the project.
 - Use descriptive labels so your notebook reads like a plan: "Install Dependencies", "Create API Routes", "Review Output"
 - Labels appear in both expanded and collapsed cell views
 - Labels are optional — cells work fine with just an ID
+
+## Agent Profiles
+
+Agent profiles let you configure different AI runtimes and settings at the notebook or cell level.
+
+### Notebook-Level Profile
+
+Set a default agent profile for the entire notebook. All task cells will use this profile unless overridden.
+
+### Per-Cell Profile
+
+Override the notebook default on individual task cells. This is useful when different tasks benefit from different runtimes or settings -- for example, using a more capable model for complex reasoning tasks and a faster one for straightforward code generation.
+
+### Runtime Health Checks
+
+The toolbar shows the health status of your configured runtimes. If a runtime is not installed, you'll see setup links to get started quickly.
 
 ## Execution Modes
 
