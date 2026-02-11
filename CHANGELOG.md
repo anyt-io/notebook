@@ -5,6 +5,24 @@ All notable changes to AnyT Notebook will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.0] - 2026-02-10
+
+### Added
+
+- Cell label attribute for human-friendly display names (e.g., `label="Setup Project"`)
+- Spec v2.1 documentation with label support
+
+### Changed
+
+- Promoted label as primary cell name, made cell ID read-only
+- Renamed spec file to `anyt-notebook-spec.md`
+- Removed workflow inputs feature from codebase
+- Removed v1.0 schema support and cleaned up stale docs
+
+### Fixed
+
+- Race condition where done marker is missed on process exit
+
 ## [0.7.0] - 2026-02-09
 
 ### Added
