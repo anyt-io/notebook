@@ -1,0 +1,32 @@
+[project]
+name = "upscale-image"
+version = "0.1.0"
+description = "Upscale and enhance images using Real-ESRGAN ncnn Vulkan"
+requires-python = ">=3.10"
+dependencies = [
+    "pillow>=10.0.0",
+    "requests>=2.28.0",
+]
+
+[dependency-groups]
+dev = [
+    "pyright>=1.1.408",
+    "pytest>=9.0.2",
+    "ruff>=0.15.0",
+]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "UP", "B", "SIM", "RUF"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+
+[tool.pyright]
+pythonVersion = "3.10"
+include = ["."]
+typeCheckingMode = "standard"

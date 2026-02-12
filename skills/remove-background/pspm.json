@@ -1,0 +1,24 @@
+{
+  "$schema": "https://pspm.dev/schema/v1/pspm.json",
+  "name": "remove-background",
+  "version": "0.1.0",
+  "description": "Remove background from images using AI models",
+  "author": "Bin Sheng <supercarl87@gmail.com>",
+  "license": "Apache-2.0",
+  "type": "skill",
+  "capabilities": [
+    "remove-image-background",
+    "batch-background-removal",
+    "generate-mask"
+  ],
+  "main": "SKILL.md",
+  "requirements": {
+    "pspm": ">=0.1.0"
+  },
+  "files": [
+    "SKILL.md",
+    "runtime"
+  ],
+  "dependencies": {},
+  "private": false
+}
