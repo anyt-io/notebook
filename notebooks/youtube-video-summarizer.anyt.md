@@ -22,6 +22,43 @@ This notebook creates a structured, section-by-section summary of a YouTube vide
 8. **Compile** — Create final markdown document
 </note>
 
+<input id="input-config" label="Video Settings">
+Enter the YouTube video URL and select the language for the summary.
+
+&nbsp;
+
+<form type="json">
+{
+  "fields": [
+    {
+      "name": "YouTube URL",
+      "type": "text",
+      "label": "YouTube URL",
+      "description": "The YouTube video URL to summarize",
+      "placeholder": "https://www.youtube.com/watch?v=..."
+    },
+    {
+      "name": "Summary Language",
+      "type": "select",
+      "label": "Summary Language",
+      "description": "Language for the generated summary",
+      "default": "en",
+      "options": [
+        {
+          "value": "en",
+          "label": "English"
+        },
+        {
+          "value": "zh",
+          "label": "中文"
+        }
+      ]
+    }
+  ]
+}
+</form>
+</input>
+
 <shell id="install-skill" label="Install Skills">
 #!/bin/bash
 echo "=== Installing youtube-downloader skill ==="
@@ -35,13 +72,14 @@ ls -la .skills/youtube-downloader/ 2>/dev/null || true
 <task id="download-info" label="Download Info">
 ## Download Video, Transcript, and Cover Image
 
-Download video, transcript, and cover image for the video.
+Download video, transcript, and cover image for the YouTube video URL provided by the user.
 
 ### Requirements
-1. Download the transcript in both JSON and text formats to `transcripts/` folder using the youtube-downloader skill
-2. Download the video at 720p to `video/` folder using the youtube-downloader skill
-3. Download the cover/thumbnail image to `cover/` folder using the youtube-downloader skill
-4. Verify all files were created in their respective folders
+1. Use the **YouTube URL** from user input
+2. Download the transcript in both JSON and text formats to `transcripts/` folder using the youtube-downloader skill
+3. Download the video at 720p to `video/` folder using the youtube-downloader skill
+4. Download the cover/thumbnail image to `cover/` folder using the youtube-downloader skill
+5. Verify all files were created in their respective folders
 
 **Output:** transcripts/<video-id>.json, transcripts/<video-id>.txt, video/<video-title>.mp4, cover/<video-id>.jpg
 </task>
@@ -122,11 +160,12 @@ Read `sections.json` and the transcript to create detailed summaries for each se
 
 ### Requirements
 1. Read `sections.json` for section boundaries and the transcript JSON from `transcripts/`
-2. For each section, create a detailed 3-5 paragraph summary with key quotes from the transcript
-3. Include `[MM:SS]` timestamp references inline
-4. For each section, also extract 2-3 key takeaways
-5. Save individual section summaries to `summaries/section_XX.md` (numbered 01, 02, etc.)
-6. Save a combined summaries file to `summaries/all_summaries.json`
+2. Write all summaries in the **Summary Language** selected by the user (English or 中文)
+3. For each section, create a detailed 3-5 paragraph summary with key quotes from the transcript
+4. Include `[MM:SS]` timestamp references inline
+5. For each section, also extract 2-3 key takeaways
+6. Save individual section summaries to `summaries/section_XX.md` (numbered 01, 02, etc.)
+7. Save a combined summaries file to `summaries/all_summaries.json`
 
 ### Output Format (`summaries/all_summaries.json`)
 ```json
@@ -169,11 +208,11 @@ Re-run `capture-screenshots` with adjusted timestamps if frames need improvement
 <task id="compile-markdown" label="Compile Markdown">
 ## Compile Final Markdown Document
 
-Create a polished markdown document combining section summaries and frame images.
+Create a polished markdown document combining section summaries and frame images. Use the **Summary Language** selected by the user for all text content.
 
 ### Requirements
 1. Read `sections.json`, `summaries/all_summaries.json`, and `frames/manifest.json`
-2. Create a comprehensive markdown document `summary.md` with:
+2. Create a comprehensive markdown document `summary.md` (in the user's selected language) with:
 
    **Header:**
    - Cover image: `![Video Cover](cover/<video-id>.jpg)` (from `cover/` folder)
