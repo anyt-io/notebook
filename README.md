@@ -15,7 +15,7 @@ When you ask an AI agent to do something complex, the one-shot chatbot model fal
 - **No recovery** -- If step 4 of 8 fails, you redo everything
 - **No separation** -- AI handles things a simple shell command could do faster
 
-AnyT Notebook solves this with a Jupyter-style notebook for AI agent workflows. Break tasks into cells, add human checkpoints, mix AI and shell scripts, and run with full control. Edit cells with a rich text editor featuring code blocks with syntax highlighting, or toggle to raw markdown. Give cells human-friendly labels so your notebook reads like a plan.
+AnyT Notebook solves this with a Jupyter-style notebook for AI agent workflows. Break tasks into cells, add human checkpoints, mix AI and shell scripts, and run with full control. Edit cells with a rich text editor featuring code blocks with syntax highlighting, or toggle to raw markdown. Give cells human-friendly labels so your notebook reads like a plan. Configure agent profiles per-notebook or per-cell to use different runtimes and settings where they matter most.
 
 ## Supported Runtimes
 
@@ -26,7 +26,7 @@ AnyT Notebook works with multiple AI runtimes:
 | **Claude Code** | Primary | Full support with streaming output |
 | **Codex** | Supported | Full support with JSON output |
 
-Select your runtime from the dropdown in the notebook toolbar. Switch between runtimes at any time.
+Select your runtime from the dropdown in the notebook toolbar. Switch between runtimes at any time. Use **agent profiles** to configure different runtimes per-notebook or per-cell -- for example, use Claude Code for complex reasoning tasks and a faster runtime for simpler ones.
 
 ## Installation
 

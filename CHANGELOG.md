@@ -5,6 +5,19 @@ All notable changes to AnyT Notebook will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0] - 2026-02-11
+
+### Added
+
+- Agent profile system for per-notebook and per-cell agent configuration
+- Runtime health checks with setup links and agent display in collapsed cells
+
+### Fixed
+
+- Agent config default selector and badge dropdown UX
+- Agent label now shows only on task cells; fixed config panel profiles
+- Auto-discover runtimes on editor open; fixed NOT INSTALLED display
+
 ## [0.8.0] - 2026-02-10
 
 ### Added
