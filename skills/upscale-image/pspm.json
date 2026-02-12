@@ -1,0 +1,24 @@
+{
+  "$schema": "https://pspm.dev/schema/v1/pspm.json",
+  "name": "upscale-image",
+  "version": "0.1.0",
+  "description": "Upscale and enhance images using Real-ESRGAN AI models",
+  "author": "Bin Sheng <supercarl87@gmail.com>",
+  "license": "Apache-2.0",
+  "type": "skill",
+  "capabilities": [
+    "upscale-image",
+    "enhance-image",
+    "batch-upscaling"
+  ],
+  "main": "SKILL.md",
+  "requirements": {
+    "pspm": ">=0.1.0"
+  },
+  "files": [
+    "SKILL.md",
+    "runtime"
+  ],
+  "dependencies": {},
+  "private": false
+}
