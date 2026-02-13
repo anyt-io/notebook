@@ -2,6 +2,16 @@
 schema: "2.0"
 name: Stock Analysis
 workdir: stock-analysis
+agents:
+  - id: claude-default
+    name: Claude Code
+    type: claude
+    default: true
+    permissionMode: bypassPermissions
+  - id: codex-default
+    name: Codex
+    type: codex
+    permissionMode: dangerously-bypass
 ---
 
 # Stock Analysis

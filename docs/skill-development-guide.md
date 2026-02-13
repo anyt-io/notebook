@@ -14,8 +14,8 @@ skills/<skill-name>/
     ├── pyproject.toml    # Python: deps + tool config (uv)
     ├── uv.lock           # Python: pinned dependency versions
     ├── .python-version   # Python: version pin
-    ├── package.json      # TypeScript: deps + scripts (bun)
-    ├── bun.lock          # TypeScript: pinned dependency versions
+    ├── package.json      # TypeScript: deps + scripts (pnpm)
+    ├── pnpm-lock.yaml    # TypeScript: pinned dependency versions
     └── <script files>    # Flat in runtime/, no nested scripts/ folder
 ```
 
@@ -66,21 +66,24 @@ include = ["."]
 typeCheckingMode = "standard"
 ```
 
-### TypeScript Skills — use `bun`
+### TypeScript Skills — use `pnpm`
 
-Each TypeScript skill's `runtime/` is a bun project.
+Each TypeScript skill's `runtime/` is a pnpm project.
 
 **Setup:**
 ```bash
 cd skills/<skill-name>/runtime
-bun init
-bun add <runtime-deps>
+pnpm init
+pnpm add <runtime-deps>
+pnpm add -D typescript tsx
 ```
 
 **Execution (from the skill folder):**
 ```bash
-bun run runtime/<script>.ts [args]
+pnpm -C runtime <script-name> [args]
 ```
+
+Scripts are defined in `runtime/package.json` under `"scripts"` and invoked via `pnpm -C runtime <script-name>`.
 
 ## SKILL.md Conventions
 
@@ -105,7 +108,7 @@ description: What this skill does. Use when the user wants to [specific triggers
 Write instructions for Claude on how to use the skill and its bundled scripts. Use imperative form. Keep it concise — only include what Claude cannot infer.
 
 - Prerequisites (external tools needed)
-- Usage commands with `uv run --project runtime` or `bun run runtime/`
+- Usage commands with `uv run --project runtime` or `pnpm -C runtime`
 - Options/flags reference
 - Limitations
 
@@ -138,7 +141,7 @@ __pycache__/
 *.pyc
 output/
 node_modules/
-bun.lockb
+pnpm-lock.yaml
 ```
 
 Skill-specific ignores go in `skills/<skill-name>/.gitignore`.
@@ -164,6 +167,7 @@ testpaths = ["tests"]
 
 Each skill should have a `.pspmignore` at its root to exclude dev files from PSPM publishing (while keeping them in git):
 
+**Python skills:**
 ```
 runtime/.venv/
 runtime/.ruff_cache/
@@ -175,6 +179,16 @@ runtime/uv.lock
 output/
 ```
 
+**TypeScript skills:**
+```
+runtime/node_modules/
+runtime/.vite/
+runtime/dist/
+runtime/tests/
+runtime/pnpm-lock.yaml
+output/
+```
+
 ## Adding a New Skill
 
 1. Create the folder: `mkdir -p skills/<skill-name>/runtime`
@@ -183,8 +197,8 @@ output/
 4. Add `.pspmignore` at the skill root
 5. Initialize the runtime:
    - Python: `cd skills/<skill-name>/runtime && uv init --name <skill-name>`
-   - TypeScript: `cd skills/<skill-name>/runtime && bun init`
+   - TypeScript: `cd skills/<skill-name>/runtime && pnpm init`
 6. Add dependencies and write scripts in `runtime/`
 7. Add `runtime/.gitignore` for dev artifacts
 8. Add tests in `runtime/tests/`
-9. Test execution from the skill folder using `--project` flag
+9. Test execution from the skill folder using `--project` flag (Python) or `-C` flag (TypeScript)

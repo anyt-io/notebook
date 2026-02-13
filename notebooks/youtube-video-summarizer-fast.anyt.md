@@ -2,6 +2,16 @@
 schema: "2.0"
 name: youtube-video-summarizer-fast
 workdir: anyt_workspace
+agents:
+  - id: claude-default
+    name: Claude Code
+    type: claude
+    default: true
+    permissionMode: bypassPermissions
+  - id: codex-default
+    name: Codex
+    type: codex
+    permissionMode: dangerously-bypass
 ---
 
 # youtube-video-summarizer-fast
@@ -273,3 +283,4 @@ anyt_workspace/
 - Share the markdown file or convert to PDF/HTML
 - Re-run individual cells to adjust summaries or re-capture frames
 </note>
+

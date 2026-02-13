@@ -12,7 +12,7 @@ skills/
     ├── SKILL.md          # Usage documentation (loaded by AI agents)
     ├── pspm.json         # PSPM manifest
     ├── .pspmignore       # Excludes dev files from PSPM publishing
-    └── runtime/          # Isolated execution environment (uv or bun project)
+    └── runtime/          # Isolated execution environment (uv or pnpm project)
 ```
 
 Each skill is self-contained. Standalone files (SKILL.md, pspm.json) live at the skill root. All code and dependencies live in `runtime/` — each skill has its own isolated environment.
@@ -23,7 +23,7 @@ Each skill is self-contained. Standalone files (SKILL.md, pspm.json) live at the
 
 ```bash
 uv run --project runtime runtime/<script>.py [args]     # Python
-bun run runtime/<script>.ts [args]                       # TypeScript
+pnpm -C runtime <script> [args]                          # TypeScript
 ```
 
 ### Dev checks (from `skills/<skill-name>/runtime/`)
@@ -45,7 +45,7 @@ uv run --project runtime runtime/validate_all_skills.py ../           # All skil
 ## Conventions
 
 - **Python skills**: Use `uv` for everything. Never use `pip` directly.
-- **TypeScript skills**: Use `bun` for everything. Never use `npm` directly.
+- **TypeScript skills**: Use `pnpm` for everything. Never use `npm` directly.
 - **SKILL.md**: Must have YAML frontmatter with `name` and `description`. Body contains usage instructions only — no development docs. Follow [Anthropic skill guidelines](https://github.com/anthropics/skills/blob/main/skills/skill-creator/SKILL.md).
 - **Output**: Skills that produce files should default to `output/` inside the skill folder (auto-created, gitignored).
 - **Testing**: Python skills include pytest tests in `runtime/tests/`.
