@@ -143,7 +143,7 @@ Open the images in `nobg/` folder and review the background removal quality.
 If all images look good, click **Continue** to proceed to upscaling.
 </break>
 
-<task id="upscale-images" label="Upscale Images">
+<task id="upscale-images" label="Upscale Images" agent="codex-default">
 ## Upscale Final Images
 
 Upscale the processed images using the **upscale-image** skill.

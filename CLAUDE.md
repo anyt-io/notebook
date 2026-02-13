@@ -75,6 +75,27 @@ GitHub Actions (`.github/workflows/validate-skills.yml`) runs on pushes/PRs to `
 2. Auto-discovers Python skills with `runtime/pyproject.toml`
 3. Runs lint (ruff), type check (pyright), and tests (pytest) for each discovered skill
 
+## PSPM (Skill Publishing)
+
+See [docs/pspm-cli-guide.md](docs/pspm-cli-guide.md) for the full PSPM CLI reference.
+
+### Publishing a skill (from `skills/<skill-name>/`)
+
+```bash
+npx @anytio/pspm@latest publish              # Publish current version
+npx @anytio/pspm@latest publish --bump patch # Auto-bump and publish
+```
+
+- Must have a valid `pspm.json` with `name` and `version`
+- Must have a `SKILL.md` with YAML frontmatter (`name`, `description`)
+- Use `npx @anytio/pspm@latest` to always run the latest CLI version
+
+### Adding a skill to a project
+
+```bash
+npx @anytio/pspm@latest add @user/<username>/<skillname> -y
+```
+
 ## Skill Guide
 
 See [docs/skill-development-guide.md](docs/skill-development-guide.md) for the full skill development conventions.
