@@ -1,0 +1,13 @@
+# Dev environment
+runtime/node_modules/
+runtime/.vite/
+runtime/dist/
+
+# Tests
+runtime/tests/
+
+# Lockfile (consumers resolve their own deps)
+runtime/pnpm-lock.yaml
+
+# Skill output
+output/
