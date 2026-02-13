@@ -1,8 +1,19 @@
 ---
 schema: "2.0"
 name: image-background-remover
-description: Remove backgrounds from images, review with human-in-the-loop, edit in Photoshop if needed, then upscale final images
+description: Remove backgrounds from images, review with human-in-the-loop, edit
+  in Photoshop if needed, then upscale final images
 workdir: image_output
+agents:
+  - id: claude-default
+    name: Claude Code
+    type: claude
+    default: true
+    permissionMode: bypassPermissions
+  - id: codex-default
+    name: Codex
+    type: codex
+    permissionMode: dangerously-bypass
 ---
 
 # image-background-remover
@@ -175,3 +186,4 @@ image_output/
 - Re-run individual cells to adjust models or reprocess specific images
 - Use the final images in your design projects, e-commerce listings, etc.
 </note>
+
