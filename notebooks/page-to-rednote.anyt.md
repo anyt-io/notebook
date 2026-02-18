@@ -2,7 +2,7 @@
 schema: "2.0"
 name: page-to-rednote
 description: Convert a blog page into Xiaohongshu/Rednote card images
-workdir: rednote_output
+workdir: anyt_workspace_rednote
 dependencies:
   rednote: 0.1.0
 agents:
@@ -200,7 +200,7 @@ If cards need adjustment:
 
 ### Generated Files
 ```
-rednote_output/
+anyt_workspace_rednote/
 ├── article.md              # Extracted article content
 ├── cards.md                # Card-formatted markdown
 └── cards/                  # Final card images (1080x1440px)

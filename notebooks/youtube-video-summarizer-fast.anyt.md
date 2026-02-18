@@ -1,7 +1,7 @@
 ---
 schema: "2.0"
 name: youtube-video-summarizer-fast
-workdir: anyt_workspace
+workdir: anyt_workspace_yt_summarizer_fast
 agents:
   - id: claude-default
     name: Claude Code
@@ -257,7 +257,7 @@ Create a polished markdown document combining section summaries and frame images
 
 ### Generated Files
 ```
-anyt_workspace/
+anyt_workspace_yt_summarizer_fast/
 ├── transcripts/
 │   ├── <video-id>.json         # Structured transcript
 │   └── <video-id>.txt          # Plain text transcript

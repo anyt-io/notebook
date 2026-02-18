@@ -1,7 +1,7 @@
 ---
 schema: "2.0"
 name: Stock Analysis
-workdir: stock-analysis
+workdir: anyt_workspace_stock_analysis
 agents:
   - id: claude-default
     name: Claude Code

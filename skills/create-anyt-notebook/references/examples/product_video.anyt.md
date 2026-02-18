@@ -2,7 +2,7 @@
 schema: "2.0"
 name: product-video
 version: 2.0.0
-workdir: anyt_workspace
+workdir: anyt_workspace_product_video
 ---
 
 # product-video
@@ -52,7 +52,7 @@ echo ""
 echo "=== Verify Installed Skills ==="
 npx skills list 2>/dev/null || echo "Skills installed successfully"
 echo ""
-ls -la .skills/ 2>/dev/null || true
+ls -la .pspm/skills/ 2>/dev/null || true
 </shell>
 
 <input id="product-info">
@@ -113,7 +113,7 @@ Create a new Remotion video project using pnpm as the package manager.
 4. Show the project structure
 
 ### Notes
-- The remotion-best-practices skill is already installed in the workspace `.skills/` directory
+- The remotion-best-practices skill is already installed in the workspace
 - Use pnpm for all package management throughout this project
 
 **Output:** remotion-video/package.json, remotion-video/src/Root.tsx

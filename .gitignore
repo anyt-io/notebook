@@ -22,9 +22,5 @@ node_modules/
 output/
 
 # Notebook workspaces
-notebooks/anyt_workspace/
-
-# Workflow outputs (when testing examples locally)
-*_output/
-*_workspace/
+anyt_workspace_*/
 .anyt/

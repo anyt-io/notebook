@@ -1,7 +1,7 @@
 ---
 schema: "2.0"
 name: data-pipeline
-workdir: pipeline-output
+workdir: anyt_workspace_data_pipeline
 ---
 
 # Data Processing Pipeline
@@ -9,12 +9,12 @@ workdir: pipeline-output
 A notebook mixing shell commands and AI tasks for data processing.
 
 <shell id="setup-dirs">
-mkdir -p pipeline-output/{raw,processed,reports}
+mkdir -p {raw,processed,reports}
 echo "Directory structure created"
 </shell>
 
 <task id="generate-data">
-Create a sample CSV file at pipeline-output/raw/sales.csv with:
+Create a sample CSV file at raw/sales.csv with:
 - Headers: date, product, quantity, price, region
 - 50 rows of realistic sales data
 - Dates spanning the last 30 days
@@ -26,14 +26,14 @@ Create a sample CSV file at pipeline-output/raw/sales.csv with:
 
 <shell id="preview-data">
 echo "=== Raw Data Preview ==="
-head -10 pipeline-output/raw/sales.csv
+head -10 raw/sales.csv
 echo ""
 echo "=== Row Count ==="
-wc -l pipeline-output/raw/sales.csv
+wc -l raw/sales.csv
 </shell>
 
 <task id="transform">
-Create a Node.js script at pipeline-output/transform.js that:
+Create a Node.js script at transform.js that:
 - Reads raw/sales.csv
 - Adds a 'total' column (quantity * price)
 - Adds a 'month' column extracted from date
@@ -43,11 +43,11 @@ Create a Node.js script at pipeline-output/transform.js that:
 </task>
 
 <shell id="run-transform">
-cd pipeline-output && node transform.js
+node transform.js
 </shell>
 
 <task id="analyze">
-Create a Python script at pipeline-output/analyze.py that:
+Create a Python script at analyze.py that:
 - Reads processed/sales-transformed.csv
 - Generates summary statistics:
   - Total revenue by product
@@ -59,15 +59,15 @@ Create a Python script at pipeline-output/analyze.py that:
 </task>
 
 <shell id="run-analysis">
-cd pipeline-output && python analyze.py
+python analyze.py
 </shell>
 
 <shell id="show-results">
 echo "=== Analysis Results ==="
-cat pipeline-output/reports/summary.txt
+cat reports/summary.txt
 echo ""
 echo "=== JSON Output ==="
-cat pipeline-output/reports/summary.json | head -30
+cat reports/summary.json | head -30
 </shell>
 
 <note id="done">
@@ -83,7 +83,6 @@ cat pipeline-output/reports/summary.json | head -30
 
 **Rerun anytime:**
 ```bash
-cd pipeline-output
 node transform.js && python analyze.py
 ```
 </note>

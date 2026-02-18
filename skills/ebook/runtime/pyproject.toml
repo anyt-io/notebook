@@ -1,0 +1,32 @@
+[project]
+name = "ebook"
+version = "0.1.0"
+description = "Convert markdown files to EPUB and PDF ebooks"
+requires-python = ">=3.11"
+dependencies = [
+    "pypandoc-binary>=1.15",
+    "weasyprint>=62.0",
+]
+
+[dependency-groups]
+dev = [
+    "pyright>=1.1.408",
+    "pytest>=9.0.2",
+    "ruff>=0.15.0",
+]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "UP", "B", "SIM", "RUF"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+
+[tool.pyright]
+pythonVersion = "3.11"
+include = ["."]
+typeCheckingMode = "standard"
