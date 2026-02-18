@@ -27,10 +27,11 @@ This notebook converts a YouTube podcast video into a polished magazine-style eb
 3. **Download** — Fetch transcript (text + JSON) and cover image
 4. **Analyze** — AI identifies sections, timestamps, and key quotes
 5. **Review Sections** — Edit section outline before writing
-6. **Settings** — Choose language, title, author, cover options
-7. **Write Article** — AI writes a magazine-style article with sections and timestamp links
-8. **Review Article** — Check the article before conversion
-9. **Convert** — Generate EPUB using the ebook skill
+6. **Screenshots** — Capture video frames at each section's timestamp
+7. **Settings** — Choose language, title, author, cover options
+8. **Write Article** — AI writes a flowing magazine-style article with embedded screenshots and watch links
+9. **Review Article** — Check the article before conversion
+10. **Convert** — Generate EPUB using the ebook skill
 </note>
 
 <input id="video-url" label="Video URL">
@@ -103,11 +104,8 @@ Read the transcript JSON file from `transcripts/` and analyze the podcast conten
    - **Summary**: A brief 1-2 sentence summary
    - **Notable quotes**: 2-3 direct quotes from the transcript worth highlighting
    - **YouTube timestamp link**: Direct link to that moment in the video (e.g., `https://youtube.com/watch?v=VIDEO_ID&t=120`)
-5. Assess overall content density and recommend an article length:
-   - `short` (~1500 words) for focused/narrow topics
-   - `medium` (~3000 words) for standard podcast episodes
-   - `long` (~5000 words) for in-depth, information-dense content
-6. Save the analysis to `sections.json`
+   - **Representative timestamp**: A timestamp (in seconds) for capturing a meaningful screenshot — pick a moment in the middle of an important visual/topic moment, not necessarily the start
+5. Save the analysis to `sections.json`
 
 ### Output Format (`sections.json`)
 ```json
@@ -116,7 +114,6 @@ Read the transcript JSON file from `transcripts/` and analyze the podcast conten
   "videoUrl": "https://youtube.com/watch?v=VIDEO_ID",
   "videoId": "VIDEO_ID",
   "totalDuration": 3600,
-  "recommendedLength": "medium",
   "sections": [
     {
       "id": 1,
@@ -126,7 +123,8 @@ Read the transcript JSON file from `transcripts/` and analyze the podcast conten
       "keyTopics": ["topic1", "topic2"],
       "summary": "Brief summary of this section...",
       "notableQuotes": ["Interesting quote from the speaker...", "Another key quote..."],
-      "youtubeLink": "https://youtube.com/watch?v=VIDEO_ID&t=0"
+      "youtubeLink": "https://youtube.com/watch?v=VIDEO_ID&t=0",
+      "representativeTimestamp": 150
     }
   ]
 }
@@ -143,12 +141,28 @@ Check `sections.json` to verify the proposed sections before the article is writ
 **Things to check:**
 - Are the section titles descriptive and engaging?
 - Should any sections be merged (too granular) or split (too broad)?
-- Is the recommended article length appropriate (`short` / `medium` / `long`)?
 - Are there sections covering uninteresting content that should be removed?
 - Are the notable quotes accurate and worth highlighting?
 
 Edit `sections.json` directly to adjust titles, merge/split sections, change the recommended length, or remove sections you don't want included.
 </break>
+
+<task id="capture-screenshots" label="Capture Screenshots">
+## Capture Video Screenshots at Section Timestamps
+
+Use the **youtube-downloader** skill to capture frame images at each section's start timestamp from `sections.json`.
+
+### Requirements
+1. Read `sections.json` and collect the `representativeTimestamp` (in seconds) for each section
+2. Use the screenshot capture feature of the youtube-downloader skill with:
+   - The **YouTube URL** from user input
+   - All section start timestamps as a comma-separated list
+   - Output to `frames/` directory
+   - Prefix: `section`
+3. Verify the screenshots were captured and report the results
+
+**Output:** frames/section_001.jpg, frames/section_002.jpg, ...
+</task>
 
 <input id="article-settings" label="Article Settings">
 ## Article Settings
@@ -160,6 +174,19 @@ Now that you've seen the content, configure the article output.
 <form type="json">
 {
   "fields": [
+    {
+      "name": "articleLength",
+      "type": "select",
+      "label": "Article Length",
+      "description": "How detailed should the article be",
+      "default": "medium",
+      "options": [
+        { "value": "short", "label": "Short (~1500 words)" },
+        { "value": "medium", "label": "Medium (~3000 words)" },
+        { "value": "long", "label": "Long (~5000 words)" },
+        { "value": "full", "label": "Full (comprehensive, all details)" }
+      ]
+    },
     {
       "name": "articleLanguage",
       "type": "select",
@@ -205,42 +232,47 @@ Now that you've seen the content, configure the article output.
 <task id="write-article" label="Write Article">
 ## Write Magazine-Style Article
 
-Read the user-reviewed `sections.json` and the full transcript to write a polished, magazine-style article.
+Read the user-reviewed `sections.json`, the full transcript, and the captured screenshots to write a polished, magazine-style article.
 
 ### Requirements
-1. Read `sections.json` (user-reviewed) and the text transcript from `transcripts/`
+1. Read `sections.json` (user-reviewed), the text transcript from `transcripts/`, and the screenshot files from `frames/`
 2. Write the article in the **Article Language** selected by the user
 3. Use the **Article Title** if provided, otherwise generate an engaging title from the content
-4. Respect the `recommendedLength` from `sections.json` (may have been adjusted by the user):
-   - `short`: ~1500 words — concise, highlights only
+4. Respect the **Article Length** selected by the user:
+   - `short`: ~1500 words — concise, key highlights only
    - `medium`: ~3000 words — balanced depth and readability
-   - `long`: ~5000 words — comprehensive, detailed coverage
+   - `long`: ~5000 words — detailed coverage of all sections
+   - `full`: comprehensive — include all details, quotes, and context from every section with no length constraint
 
 ### Article Structure
 Write `article.md` with the following structure:
 
 1. **Title**: H1 heading — the article title
 2. **Byline**: Author/source attribution (from user input) and original video link
-3. **Introduction**: A compelling 2-3 paragraph opening that hooks the reader and sets the stage
-4. **Sections**: For each section in `sections.json`:
+3. **Outline**: A linked table of contents listing all section titles as markdown anchor links (e.g., `- [Section Title](#section-title)`)
+4. **Introduction**: A compelling 2-3 paragraph opening that hooks the reader and sets the stage
+5. **Sections**: For each section in `sections.json`:
    - H2 heading with the section title
-   - A YouTube timestamp link at the start: `[Watch this section ▶](youtube_link)`
+   - Embed the corresponding screenshot image: `![](frames/section_NNN.jpg)`
+   - A short watch link: `[Watch](youtube_link)` — using the section's `youtubeLink`
    - Well-written editorial prose that:
      - Transforms conversational transcript into polished written form
      - Integrates direct quotes naturally (clean up filler words, false starts)
      - Explains technical concepts or jargon for a general audience
      - Maintains the speaker's voice and personality
      - Connects ideas across the conversation
-5. **Key Takeaways**: A closing section with bullet-point highlights
-6. **Source**: Link back to the original YouTube video
+6. **Key Takeaways**: A closing section with bullet-point highlights
+7. **Source**: Link back to the original YouTube video
 
 ### Writing Guidelines
 - Write as a skilled magazine editor — authoritative, engaging, and accessible
+- Use H2 headings (`##`) for each section — matching titles from `sections.json`
+- Use `![](frames/section_NNN.jpg)` to embed each section's screenshot (section 1 → `section_001.jpg`, section 2 → `section_002.jpg`, etc.)
+- Use `[Watch](youtube_link)` as a compact clickable link (not `[Watch this section ▶]`)
 - Clean up spoken language into polished prose (remove "um", "like", false starts)
 - Preserve the best direct quotes using blockquote format (`>`)
 - Explain insider references or technical terms in context
 - Each section should flow naturally into the next
-- Include YouTube timestamp links so readers can jump to the video
 
 **Output:** article.md
 </task>
@@ -252,8 +284,9 @@ Review `article.md` before converting to EPUB.
 
 **Things to check:**
 - Is the writing quality high and the tone consistent?
-- Are sections well-organized and flowing logically?
-- Are YouTube timestamp links working correctly?
+- Does the outline at the top list all sections with working anchor links?
+- Does each section have an H2 heading, screenshot, and `[Watch]` link?
+- Are screenshot images embedded correctly (`![](frames/section_NNN.jpg)`)?
 - Is the article in the correct language?
 - Are quotes accurate and properly attributed?
 - Is the length appropriate for the content?
@@ -271,7 +304,8 @@ Use the **ebook** skill to convert `article.md` into a polished EPUB file.
 2. Use the **Author / Source** from user input
 3. If **Use YouTube Thumbnail as Cover** is enabled, include the cover image from `cover/`
 4. Convert to EPUB format and save to `output/`
-5. Verify the EPUB was created and report the file size
+5. **Important:** Pass the title (`-t`) and author (`-a`) to the ebook skill so the output file is named after the title (e.g., `output/my-article-title.epub`), not the default `article.epub`
+6. Verify the EPUB was created and report the file size
 
 **Output:** output/<title>.epub
 </task>
@@ -287,8 +321,12 @@ anyt_workspace_podcast_ebook/
 │   └── <video-id>.txt           # Plain text transcript
 ├── cover/
 │   └── <video-id>.jpg           # Video thumbnail
+├── frames/
+│   ├── section_001.jpg          # Screenshot per section
+│   ├── section_002.jpg
+│   └── ...
 ├── sections.json                # Section breakdown (user-reviewed)
-├── article.md                   # Magazine-style article
+├── article.md                   # Magazine-style article with embedded screenshots
 └── output/
     └── <title>.epub             # Final EPUB ebook
 ```
