@@ -1,7 +1,7 @@
 ---
 schema: "2.0"
 name: youtube-video-summarizer
-workdir: anyt_workspace
+workdir: anyt_workspace_yt_summarizer
 ---
 
 # youtube-video-summarizer
@@ -247,7 +247,7 @@ Create a polished markdown document combining section summaries and frame images
 
 ### Generated Files
 ```
-anyt_workspace/
+anyt_workspace_yt_summarizer/
 ├── transcripts/
 │   ├── <video-id>.json         # Structured transcript
 │   └── <video-id>.txt          # Plain text transcript

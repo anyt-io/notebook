@@ -1,0 +1,24 @@
+{
+  "$schema": "https://pspm.dev/schema/v1/pspm.json",
+  "name": "ebook",
+  "version": "0.1.0",
+  "description": "Convert markdown files to EPUB and PDF ebooks",
+  "author": "Bin Sheng <supercarl87@gmail.com>",
+  "license": "Apache-2.0",
+  "type": "skill",
+  "capabilities": [
+    "markdown-to-epub",
+    "markdown-to-pdf",
+    "ebook-generation"
+  ],
+  "main": "SKILL.md",
+  "requirements": {
+    "pspm": ">=0.1.0"
+  },
+  "files": [
+    "SKILL.md",
+    "runtime"
+  ],
+  "dependencies": {},
+  "private": false
+}

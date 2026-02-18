@@ -66,26 +66,27 @@ Frontmatter MUST be enclosed between two `---` lines at the very start of the fi
 | `name` | string | Yes | — | Notebook identifier (used as filename stem and heading) |
 | `description` | string | No | — | Human-readable summary |
 | `version` | string | No | — | Semantic version (e.g. `"1.0.0"`) |
-| `workdir` | string | No | `"anyt_workspace"` | Execution directory (relative to `.anyt.md` file or absolute) |
+| `workdir` | string | No | `"anyt_workspace"` | Execution directory (relative to `.anyt.md` file or absolute). Use `anyt_workspace_` prefix convention. |
 
 ### Working Directory
 
 The `workdir` field sets the current working directory for all cell execution. All file paths in shell scripts and task descriptions should be **relative to workdir**, not include the workdir name.
 
+**Convention:** Always use the `anyt_workspace_` prefix for workdir names (e.g., `anyt_workspace_yt_summarizer`, `anyt_workspace_rednote`). This ensures all workspace folders are gitignored by the `anyt_workspace_*/` pattern.
+
 ```yaml
-workdir: my-project
+workdir: anyt_workspace_my_project
 ```
 
 **Correct usage** (paths relative to workdir):
 ```bash
-mkdir -p src docs        # Creates my-project/src, my-project/docs
-cat config.json          # Reads my-project/config.json
+mkdir -p src docs        # Creates anyt_workspace_my_project/src, anyt_workspace_my_project/docs
+cat config.json          # Reads anyt_workspace_my_project/config.json
 ```
 
 **Incorrect usage** (creates nested folders):
 ```bash
-mkdir -p my-project/src  # Wrong! Creates my-project/my-project/src
-cat my-project/config.json  # Wrong! Looks for my-project/my-project/config.json
+mkdir -p anyt_workspace_my_project/src  # Wrong! Creates nested path
 ```
 | `env_file` | string | No | `".env"` | Path to .env file (relative to notebook or absolute) |
 | `dependencies` | object | No | — | Skill dependencies as `name: version` pairs |
@@ -96,7 +97,7 @@ cat my-project/config.json  # Wrong! Looks for my-project/my-project/config.json
 ---
 schema: "2.0"
 name: my-notebook
-workdir: output
+workdir: anyt_workspace_my_notebook
 ---
 ```
 
@@ -136,7 +137,7 @@ schema: "2.0"
 name: web-scraper
 description: Scrape and process website data
 version: 1.0.0
-workdir: scraper_output
+workdir: anyt_workspace_scraper
 env_file: ".env"  # Optional - defaults to .env in notebook directory
 dependencies:
   scraping-tools: "1.0.0"
@@ -221,6 +222,7 @@ Same content, but displayed with a readable label in the UI.
 - Reference files created by previous cells where relevant
 - Use `**Output:** file1, file2` to declare expected output files (parsed by the system)
 - Markdown formatting is preserved and passed to the AI agent
+- **Do NOT include explicit CLI commands** for installed skills — just describe what to do (inputs/outputs) and name the skill. The AI agent reads the skill's SKILL.md and determines the correct commands itself.
 
 **Examples:**
 ```xml
@@ -255,6 +257,8 @@ command2
 - stdout and stderr are captured to `output.log`
 - Exit code 0 = success, non-zero = failure
 - Use for deterministic operations: installing dependencies, running builds, creating directories
+
+**Skill installation:** Use `npx @anytio/pspm@latest add @user/<username>/<skillname> -y` to install skills. Skills are installed to `.pspm/skills/` and symlinked into agent skill directories (`.claude/skills/`, `.codex/skills/`, etc.). Verify with `ls -la .pspm/skills/anyt/<skill-name>/`.
 
 **Example:**
 ```xml
@@ -597,7 +601,7 @@ Based on the user's input from the "config" step:
 ---
 schema: "2.0"
 name: hello-world
-workdir: hello-output
+workdir: anyt_workspace_hello
 ---
 
 # hello-world
@@ -613,14 +617,13 @@ Create a file called hello.txt with the text "Hello from AnyT!"
 ---
 schema: "2.0"
 name: express-api
-workdir: express-api
+workdir: anyt_workspace_express_api
 ---
 
 # express-api
 
 <shell id="init" label="Initialize Project">
-mkdir -p express-api
-cd express-api && npm init -y && npm install express typescript @types/express
+npm init -y && npm install express typescript @types/express
 </shell>
 
 <task id="create-server" label="Create Express Server">
@@ -633,7 +636,7 @@ Create an Express.js server with TypeScript:
 </task>
 
 <shell id="build" label="Build TypeScript">
-cd express-api && npx tsc
+npx tsc
 </shell>
 
 <task id="add-tests" label="Add Tests">
@@ -650,7 +653,7 @@ Add Vitest tests for the health endpoint:
 - Routes: `src/routes/health.ts`
 - Tests: `tests/health.test.ts`
 
-Run: `cd express-api && npx tsc && node dist/app.js`
+Run: `npx tsc && node dist/app.js`
 </note>
 ```
 
@@ -660,7 +663,7 @@ Run: `cd express-api && npx tsc && node dist/app.js`
 ---
 schema: "2.0"
 name: project-scaffolder
-workdir: my-project
+workdir: anyt_workspace_project_scaffolder
 ---
 
 # project-scaffolder
@@ -729,7 +732,7 @@ Based on the user's input from the config step, create a project:
 </task>
 
 <shell id="install" label="Install Dependencies">
-cd my-project && npm install
+npm install
 </shell>
 
 <break id="review" label="Review Project">
@@ -747,9 +750,8 @@ Add a test setup:
 ## Project Scaffolded!
 
 Run:
-1. `cd my-project`
-2. `npm run dev`
-3. `npm test`
+1. `npm run dev`
+2. `npm test`
 </note>
 ```
 
@@ -759,17 +761,17 @@ Run:
 ---
 schema: "2.0"
 name: data-pipeline
-workdir: pipeline-output
+workdir: anyt_workspace_data_pipeline
 ---
 
 # data-pipeline
 
 <shell id="setup-dirs" label="Create Directories">
-mkdir -p pipeline-output/{raw,processed,reports}
+mkdir -p {raw,processed,reports}
 </shell>
 
 <task id="generate-data" label="Generate Sample Data">
-Create a sample CSV file at pipeline-output/raw/sales.csv with:
+Create a sample CSV file at raw/sales.csv with:
 - Headers: date, product, quantity, price, region
 - 50 rows of realistic sales data
 - Dates spanning the last 30 days
@@ -777,13 +779,13 @@ Create a sample CSV file at pipeline-output/raw/sales.csv with:
 
 <shell id="preview">
 echo "=== Preview ==="
-head -10 pipeline-output/raw/sales.csv
+head -10 raw/sales.csv
 echo "=== Row Count ==="
-wc -l pipeline-output/raw/sales.csv
+wc -l raw/sales.csv
 </shell>
 
 <task id="transform" label="Build Transform Script">
-Create pipeline-output/transform.js that:
+Create transform.js that:
 - Reads raw/sales.csv
 - Adds a 'total' column (quantity * price)
 - Filters rows with quantity < 5
@@ -791,18 +793,18 @@ Create pipeline-output/transform.js that:
 </task>
 
 <shell id="run-transform">
-cd pipeline-output && node transform.js
+node transform.js
 </shell>
 
 <task id="analyze" label="Analyze Sales Data">
-Create pipeline-output/analyze.py that:
+Create analyze.py that:
 - Reads processed/sales-clean.csv
 - Computes revenue by product and region
 - Writes reports/summary.json and reports/summary.txt
 </task>
 
 <shell id="run-analysis">
-cd pipeline-output && python analyze.py
+python analyze.py
 </shell>
 
 <note id="done" label="Pipeline Complete">
@@ -821,7 +823,7 @@ When generating a notebook, ensure:
 1. **Frontmatter**: Must start with `---` and end with `---`
 2. **`schema: "2.0"`**: Must be present as the first field in frontmatter
 3. **`name`**: Required. Used in the `# heading` after frontmatter
-4. **`workdir`**: Should be set to a meaningful directory name
+4. **`workdir`**: Should use the `anyt_workspace_` prefix (e.g., `anyt_workspace_my_project`)
 5. **Unique IDs**: Every cell `id` must be unique within the file
 6. **Valid cell types**: Only `task`, `shell`, `input`, `note`, `break`
 7. **Closed tags**: Every `<type id="...">` must have a matching `</type>`

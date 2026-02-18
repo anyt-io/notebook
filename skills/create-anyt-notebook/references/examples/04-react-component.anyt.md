@@ -1,7 +1,7 @@
 ---
 schema: "2.0"
 name: react-component
-workdir: components
+workdir: anyt_workspace_react_component
 ---
 
 # React Component Generator

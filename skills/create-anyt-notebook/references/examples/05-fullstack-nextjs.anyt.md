@@ -1,7 +1,7 @@
 ---
 schema: "2.0"
 name: fullstack-nextjs
-workdir: nextjs-app
+workdir: anyt_workspace_nextjs_app
 ---
 
 # Full-Stack Next.js App
@@ -109,7 +109,7 @@ Create API routes:
 </task>
 
 <shell id="format">
-cd nextjs-app && npm run lint -- --fix
+npm run lint -- --fix
 </shell>
 
 <note id="complete">
@@ -125,8 +125,6 @@ Your Next.js app includes:
 ### Getting Started
 
 ```bash
-cd nextjs-app
-
 # Set up environment
 cp .env.example .env.local
 # Edit .env.local with your credentials

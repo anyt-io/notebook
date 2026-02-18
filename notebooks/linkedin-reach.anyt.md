@@ -3,7 +3,7 @@ schema: "2.0"
 name: linkedin-reach
 description: Find LinkedIn connections matching specific criteria and send
   personalized cold outreach about AnyT Notebook
-workdir: linkedin_reach
+workdir: anyt_workspace_linkedin_reach
 agents:
   - id: claude-default
     name: Claude Code
@@ -279,7 +279,7 @@ Read `.browser-mode` to determine which mode to use:
 
 ### Generated Files
 ```
-linkedin_reach/
+anyt_workspace_linkedin_reach/
 ├── candidates.md          # Candidate list (markdown)
 ├── candidates.json        # Candidate list (structured)
 ├── messages.md            # Personalized messages (markdown)

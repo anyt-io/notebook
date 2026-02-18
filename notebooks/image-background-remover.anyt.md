@@ -3,7 +3,7 @@ schema: "2.0"
 name: image-background-remover
 description: Remove backgrounds from images, review with human-in-the-loop, edit
   in Photoshop if needed, then upscale final images
-workdir: image_output
+workdir: anyt_workspace_image_bg_remover
 agents:
   - id: claude-default
     name: Claude Code
@@ -175,7 +175,7 @@ If any images need re-processing, go back and adjust the previous steps.
 
 ### Generated Files
 ```
-image_output/
+anyt_workspace_image_bg_remover/
 ├── nobg/              # Background-removed images (transparent PNG)
 ├── edited/            # Human-edited images (if any were fixed in Photoshop)
 └── upscaled/          # Final upscaled images

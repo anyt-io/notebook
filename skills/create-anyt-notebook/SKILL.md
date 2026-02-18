@@ -33,7 +33,7 @@ An `.anyt.md` file has two sections: YAML frontmatter and a body with cell tags.
 | `name` | string | Yes | — | Notebook identifier (used as heading) |
 | `description` | string | No | — | Human-readable summary |
 | `version` | string | No | — | Semantic version |
-| `workdir` | string | No | `"anyt_workspace"` | Working directory for execution (relative to notebook file) |
+| `workdir` | string | No | `"anyt_workspace"` | Working directory for execution (relative to notebook file). Use `anyt_workspace_` prefix (e.g., `anyt_workspace_yt_summarizer`). |
 | `env_file` | string | No | `".env"` | Path to .env file for secrets |
 | `dependencies` | object | No | — | Skill dependencies as `name: version` pairs |
 
@@ -43,7 +43,7 @@ Minimal valid frontmatter:
 ---
 schema: "2.0"
 name: my-notebook
-workdir: output
+workdir: anyt_workspace_my_notebook
 ---
 ```
 
@@ -51,12 +51,14 @@ workdir: output
 
 `workdir` sets the current working directory for all cell execution. All file paths in shell scripts and task descriptions should be **relative to workdir**, not include the workdir name.
 
+**Convention:** Always use the `anyt_workspace_` prefix for workdir names (e.g., `anyt_workspace_yt_summarizer`, `anyt_workspace_rednote`). This ensures all workspace folders are gitignored by the `anyt_workspace_*/` pattern.
+
 ```yaml
-workdir: my-project
+workdir: anyt_workspace_my_project
 ```
 
-Correct: `mkdir -p src docs` (creates `my-project/src`, `my-project/docs`)
-Wrong: `mkdir -p my-project/src` (creates `my-project/my-project/src`)
+Correct: `mkdir -p src docs` (creates `anyt_workspace_my_project/src`, `anyt_workspace_my_project/docs`)
+Wrong: `mkdir -p anyt_workspace_my_project/src` (creates nested path)
 
 ### Environment Variables
 
@@ -116,6 +118,7 @@ Use Express.js with TypeScript and proper error handling.
 - Reference files created by previous cells (paths relative to workdir)
 - Reference input cell responses
 - Use `**Output:** file1, file2` to declare expected output files
+- **Do NOT include explicit CLI commands** for installed skills — just describe what to do (inputs/outputs) and name the skill. The AI agent reads the skill's SKILL.md and determines the correct commands itself.
 
 ### Shell Cell
 
@@ -132,6 +135,8 @@ npm install express typescript @types/express
 - `#!/bin/bash` shebang is optional but recommended
 - Exit code 0 = success, non-zero = failure
 - Use for installation, building, testing, deployment
+
+**Skill installation:** Use `npx @anytio/pspm@latest add @user/<username>/<skillname> -y` to install skills. Skills are installed to `.pspm/skills/` and symlinked into agent skill directories (`.claude/skills/`, `.codex/skills/`, etc.). Verify with `ls -la .pspm/skills/anyt/<skill-name>/`.
 
 ### Input Cell
 
@@ -273,7 +278,7 @@ When generating a notebook, ensure:
 1. Frontmatter starts with `---` and ends with `---`
 2. `schema: "2.0"` is the first field in frontmatter
 3. `name` is required
-4. `workdir` should be set to a meaningful directory name
+4. `workdir` should use the `anyt_workspace_` prefix (e.g., `anyt_workspace_my_project`)
 5. Every cell `id` is unique within the file
 6. Only valid cell types: `task`, `shell`, `input`, `note`, `break`
 7. Every `<type id="...">` has a matching `</type>`
@@ -290,7 +295,7 @@ When generating a notebook, ensure:
 schema: "2.0"
 name: express-api
 description: Build an Express.js API with TypeScript
-workdir: express-api
+workdir: anyt_workspace_express_api
 ---
 
 # express-api
