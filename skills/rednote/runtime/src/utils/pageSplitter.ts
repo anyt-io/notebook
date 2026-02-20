@@ -22,11 +22,46 @@ function buildMeasurerStyles(template: Template, overrides: StyleOverrides): str
 	].join(";");
 }
 
+/**
+ * Split block elements containing <br> tags into individual elements.
+ * This enables granular page splitting for content where single newlines
+ * produce <br> inside one <p> (common with marked's breaks:true option).
+ * Split elements use margin:0 to match the original <br> line spacing.
+ */
+function splitBrIntoBlocks(html: string): string {
+	const temp = document.createElement("div");
+	temp.innerHTML = html;
+
+	const children = Array.from(temp.children);
+	for (const child of children) {
+		if (!(child instanceof HTMLElement)) continue;
+
+		const tag = child.tagName.toLowerCase();
+		if (tag !== "p") continue;
+		if (!child.querySelector("br")) continue;
+
+		const parts = child.innerHTML.split(/<br\s*\/?>/gi);
+		const nonEmpty = parts.filter((p) => p.trim().length > 0);
+		if (nonEmpty.length <= 1) continue;
+
+		const fragment = document.createDocumentFragment();
+		for (const part of nonEmpty) {
+			const el = document.createElement(tag);
+			el.innerHTML = part;
+			el.style.margin = "0";
+			fragment.appendChild(el);
+		}
+		child.replaceWith(fragment);
+	}
+
+	return temp.innerHTML;
+}
+
 function measureAndSplit(html: string, template: Template, overrides: StyleOverrides): string[] {
 	const container = document.createElement("div");
 	container.setAttribute("style", buildMeasurerStyles(template, overrides));
 	container.className = "card-body";
-	container.innerHTML = html;
+	container.innerHTML = splitBrIntoBlocks(html);
 	document.body.appendChild(container);
 
 	const elements = Array.from(container.children) as HTMLElement[];
@@ -68,14 +103,19 @@ export function splitContentIntoPages(
 	markdown: string,
 	template: Template,
 	overrides: StyleOverrides,
+	autoPageBreak = true,
 ): string[] {
 	const sections = splitByPageBreaks(markdown);
 	const allPages: string[] = [];
 
 	for (const section of sections) {
 		const html = parseMarkdown(section);
-		const sectionPages = measureAndSplit(html, template, overrides);
-		allPages.push(...sectionPages);
+		if (autoPageBreak) {
+			const sectionPages = measureAndSplit(html, template, overrides);
+			allPages.push(...sectionPages);
+		} else {
+			allPages.push(html);
+		}
 	}
 
 	return allPages.length > 0 ? allPages : ["<p></p>"];

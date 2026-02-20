@@ -3,6 +3,7 @@ import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useSta
 import { createRoot } from "react-dom/client";
 import { CARD_HEIGHT, CARD_WIDTH } from "../constants";
 import { useI18n } from "../i18n";
+import { I18nProvider } from "../i18n";
 import type { CoverConfig, StyleOverrides, Template } from "../types";
 import { convertImageUrlsInHtml, downloadAllCards, downloadSingleCard } from "../utils/download";
 import Card from "./Card";
@@ -97,7 +98,7 @@ const PreviewPanel = forwardRef<PreviewPanelHandle, PreviewPanelProps>(
 					container.appendChild(wrapper);
 
 					const root = createRoot(wrapper);
-					root.render(cardElement);
+					root.render(<I18nProvider>{cardElement}</I18nProvider>);
 
 					requestAnimationFrame(() => {
 						requestAnimationFrame(() => {

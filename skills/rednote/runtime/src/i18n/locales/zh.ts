@@ -44,6 +44,7 @@ const zh: TranslationRecord = {
 	"ctrl.coverImage": "\u5C01\u9762\u56FE\u7247",
 	"ctrl.uploadImage": "\u4E0A\u4F20\u56FE\u7247",
 	"ctrl.coverFontSize": "\u5C01\u9762\u5B57\u53F7",
+	"ctrl.autoPageBreak": "\u81EA\u52A8\u5206\u9875",
 	"ctrl.watermark": "\u6C34\u5370\u6587\u5B57",
 	"ctrl.watermarkPlaceholder": "\u4F8B\u5982\uFF1A\u5C0F\u7EA2\u4E66 ID",
 	"ctrl.downloadAll": "\u6253\u5305\u4E0B\u8F7D\u5168\u90E8\u56FE\u7247",
