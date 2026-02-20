@@ -44,6 +44,7 @@ const en: TranslationRecord = {
 	"ctrl.coverImage": "Cover Image",
 	"ctrl.uploadImage": "Upload Image",
 	"ctrl.coverFontSize": "Cover Font Size",
+	"ctrl.autoPageBreak": "Auto Page Break",
 	"ctrl.watermark": "Watermark",
 	"ctrl.watermarkPlaceholder": "e.g. Your ID",
 	"ctrl.downloadAll": "Download All Images",

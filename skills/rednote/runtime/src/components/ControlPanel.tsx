@@ -19,10 +19,12 @@ interface ControlPanelProps {
 	styleOverrides: StyleOverrides;
 	watermark: string;
 	coverConfig: CoverConfig;
+	autoPageBreak: boolean;
 	onSelectTemplate: (t: Template) => void;
 	onStyleChange: (overrides: StyleOverrides) => void;
 	onWatermarkChange: (w: string) => void;
 	onCoverChange: (config: CoverConfig) => void;
+	onAutoPageBreakChange: (v: boolean) => void;
 	onDownloadAll?: () => void;
 }
 
@@ -77,10 +79,12 @@ export default function ControlPanel({
 	styleOverrides,
 	watermark,
 	coverConfig,
+	autoPageBreak,
 	onSelectTemplate,
 	onStyleChange,
 	onWatermarkChange,
 	onCoverChange,
+	onAutoPageBreakChange,
 	onDownloadAll,
 }: ControlPanelProps) {
 	const { t } = useI18n();
@@ -226,6 +230,18 @@ export default function ControlPanel({
 									value={styleOverrides.letterSpacing}
 									onChange={(e) => updateStyle("letterSpacing", Number(e.target.value))}
 								/>
+							</div>
+
+							{/* Auto Page Break */}
+							<div className="control-group">
+								<label className="cover-toggle">
+									<span>{t("ctrl.autoPageBreak")}</span>
+									<input
+										type="checkbox"
+										checked={autoPageBreak}
+										onChange={(e) => onAutoPageBreakChange(e.target.checked)}
+									/>
+								</label>
 							</div>
 
 							{/* Reset */}

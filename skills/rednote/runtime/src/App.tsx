@@ -37,15 +37,16 @@ function AppContent() {
 	const [styleOverrides, setStyleOverrides] = useState<StyleOverrides>(DEFAULT_OVERRIDES);
 	const [watermark, setWatermark] = useState("AnyT");
 	const [coverConfig, setCoverConfig] = useState<CoverConfig>(DEFAULT_COVER);
+	const [autoPageBreak, setAutoPageBreak] = useState(true);
 	const [pages, setPages] = useState<string[]>([""]);
 	const [mobileTab, setMobileTab] = useState<MobileTab>("preview");
 	const previewRef = useRef<PreviewPanelHandle>(null);
 	const prevLocaleRef = useRef(locale);
 
 	const recomputePages = useCallback(() => {
-		const result = splitContentIntoPages(markdown, template, styleOverrides);
+		const result = splitContentIntoPages(markdown, template, styleOverrides, autoPageBreak);
 		setPages(result);
-	}, [markdown, template, styleOverrides]);
+	}, [markdown, template, styleOverrides, autoPageBreak]);
 
 	useEffect(() => {
 		const timer = setTimeout(recomputePages, 200);
@@ -94,10 +95,12 @@ function AppContent() {
 					styleOverrides={styleOverrides}
 					watermark={watermark}
 					coverConfig={coverConfig}
+					autoPageBreak={autoPageBreak}
 					onSelectTemplate={handleTemplateSelect}
 					onStyleChange={setStyleOverrides}
 					onWatermarkChange={setWatermark}
 					onCoverChange={setCoverConfig}
+					onAutoPageBreakChange={setAutoPageBreak}
 					onDownloadAll={() => previewRef.current?.downloadAll()}
 				/>
 			</div>

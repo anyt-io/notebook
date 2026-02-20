@@ -42,6 +42,7 @@ export const TRANSLATION_KEYS = [
 	"ctrl.coverImage",
 	"ctrl.uploadImage",
 	"ctrl.coverFontSize",
+	"ctrl.autoPageBreak",
 	"ctrl.watermark",
 	"ctrl.watermarkPlaceholder",
 	"ctrl.downloadAll",
