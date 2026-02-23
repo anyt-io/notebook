@@ -153,9 +153,10 @@ Use the **gemini-image** skill to generate images based on the user's settings.
 4. If the user selected a Resolution other than "Default" AND the model is `gemini-3-pro-image-preview`, add `--image-size`
 5. Set the count via `--count`
 6. Save output to the `generated/` folder via `-o generated/`
-7. After generation, list the output files with their dimensions
+7. After generation, copy the first generated image to `generated/gemini_image.png` so the edit step can reference it by a stable name
+8. List the output files with their dimensions
 
-**Output:** generated/gemini_*.png
+**Output:** generated/gemini_*.png, generated/gemini_image.png
 </task>
 
 <break id="review-generated" label="Review Generated Images">
@@ -186,8 +187,9 @@ Select one of the generated images and describe what changes you want.
       "name": "inputImage",
       "type": "text",
       "label": "Input Image Path",
-      "description": "Path to the image to edit (relative to workspace, e.g., generated/gemini_20260223_143000_1.png)",
+      "description": "Path to the image to edit (relative to workspace). Use the filename from the generated/ folder.",
       "required": true,
+      "default": "generated/gemini_image.png",
       "placeholder": "generated/gemini_*.png"
     },
     {
@@ -196,7 +198,7 @@ Select one of the generated images and describe what changes you want.
       "label": "Edit Instructions",
       "description": "Describe what to change, add, or remove from the image",
       "required": true,
-      "default": "Add a steaming cup of coffee on the nearest table in the foreground, with visible steam wisps catching the warm light",
+      "default": "Change the perspective to a dramatic bird's-eye view looking straight down from above, keeping all the same elements and lighting",
       "rows": 3
     },
     {
