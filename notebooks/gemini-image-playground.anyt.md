@@ -198,7 +198,7 @@ Select one of the generated images and describe what changes you want.
       "label": "Edit Instructions",
       "description": "Describe what to change, add, or remove from the image",
       "required": true,
-      "default": "Change the perspective to a dramatic bird's-eye view looking straight down from above, keeping all the same elements and lighting",
+      "default": "Show the same scene from the opposite side, as if the camera walked around to face the other direction while keeping the same lighting and style",
       "rows": 3
     },
     {
