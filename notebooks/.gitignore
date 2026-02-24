@@ -1,2 +1,3 @@
 anyt_workspace_*/
 .anyt/
+.env*
