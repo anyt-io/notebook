@@ -1,15 +1,16 @@
 {
   "$schema": "https://pspm.dev/schema/v1/pspm.json",
-  "name": "create-anyt-notebook",
-  "version": "0.3.0",
-  "description": "Create AnyT Notebook (.anyt.md) files for AI agent workflows",
+  "name": "gemini-video",
+  "version": "0.2.0",
+  "description": "Generate videos using Google Gemini Veo API",
   "author": "Bin Sheng <supercarl87@gmail.com>",
   "license": "Apache-2.0",
   "type": "skill",
   "capabilities": [
-    "Create AnyT notebooks",
-    "AI agent workflow design",
-    "Notebook file format reference"
+    "text-to-video",
+    "image-to-video",
+    "ai-video-generation",
+    "video-concatenation"
   ],
   "main": "SKILL.md",
   "requirements": {
@@ -17,7 +18,7 @@
   },
   "files": [
     "SKILL.md",
-    "references"
+    "runtime"
   ],
   "dependencies": {},
   "private": false

@@ -1,8 +1,8 @@
 # AnyT Notebook File Specification
 
-> **Spec version**: `2.1`
+> **Spec version**: `2.3`
 > **Schema version**: `2.0`
-> **Last updated**: 2026-02-10
+> **Last updated**: 2026-02-19
 > **Purpose**: Complete specification for generating valid `.anyt.md` notebook files.
 > This document is designed to be consumed by AI systems as a reference for
 > creating, editing, and validating AnyT notebooks.
@@ -11,10 +11,24 @@
 
 | Spec Version | Schema Version | Date | Description |
 |--------------|----------------|------|-------------|
-| **2.1** | **2.0** | 2026-02-10 | Add `label` attribute. Cell IDs read-only in UI. |
+| **2.3** | **2.0** | 2026-02-19 | Add `skip` attribute for break cells, global skip breakpoints toggle. Multi-document sessions. |
+| 2.2 | 2.0 | 2026-02-13 | Add `agent` attribute, `agents` frontmatter, health checks. Remove v1 schema. |
+| 2.1 | 2.0 | 2026-02-10 | Add `label` attribute. Cell IDs read-only in UI. |
 | 2.0 | 2.0 | 2026-02-05 | Initial schema 2.0. Structure-only file with folder-based state. |
 
 ### Changelog
+
+#### 2.3 (2026-02-19)
+- **Added** optional `skip` attribute on break cells to skip them during execution
+- **Added** global "Skip Breakpoints" toggle in execution options to skip all break cells
+- **Added** validation rule 14 for `skip` attribute (break cells only)
+
+#### 2.2 (2026-02-13)
+- **Added** optional `agent` attribute on all cell types for per-cell agent profile override
+- **Added** `agents` frontmatter field for defining named agent profiles
+- **Added** validation rule 13 for agent profile references
+- **Removed** v1 schema support (`SchemaVersion` is now `"2.0"` only)
+- **Removed** `inputs` frontmatter field (replaced by form-based input cells)
 
 #### 2.1 (2026-02-10)
 - **Added** optional `label` attribute on all cell types for human-friendly display names
@@ -66,30 +80,61 @@ Frontmatter MUST be enclosed between two `---` lines at the very start of the fi
 | `name` | string | Yes | — | Notebook identifier (used as filename stem and heading) |
 | `description` | string | No | — | Human-readable summary |
 | `version` | string | No | — | Semantic version (e.g. `"1.0.0"`) |
-| `workdir` | string | No | `"anyt_workspace"` | Execution directory (relative to `.anyt.md` file or absolute). Use `anyt_workspace_` prefix convention. |
+| `workdir` | string | No | `"anyt_workspace"` | Execution directory (relative to `.anyt.md` file or absolute) |
 
 ### Working Directory
 
 The `workdir` field sets the current working directory for all cell execution. All file paths in shell scripts and task descriptions should be **relative to workdir**, not include the workdir name.
 
-**Convention:** Always use the `anyt_workspace_` prefix for workdir names (e.g., `anyt_workspace_yt_summarizer`, `anyt_workspace_rednote`). This ensures all workspace folders are gitignored by the `anyt_workspace_*/` pattern.
-
 ```yaml
-workdir: anyt_workspace_my_project
+workdir: my-project
 ```
 
 **Correct usage** (paths relative to workdir):
 ```bash
-mkdir -p src docs        # Creates anyt_workspace_my_project/src, anyt_workspace_my_project/docs
-cat config.json          # Reads anyt_workspace_my_project/config.json
+mkdir -p src docs        # Creates my-project/src, my-project/docs
+cat config.json          # Reads my-project/config.json
 ```
 
 **Incorrect usage** (creates nested folders):
 ```bash
-mkdir -p anyt_workspace_my_project/src  # Wrong! Creates nested path
+mkdir -p my-project/src  # Wrong! Creates my-project/my-project/src
+cat my-project/config.json  # Wrong! Looks for my-project/my-project/config.json
 ```
 | `env_file` | string | No | `".env"` | Path to .env file (relative to notebook or absolute) |
 | `dependencies` | object | No | — | Skill dependencies as `name: version` pairs |
+| `agents` | array | No | — | Agent profiles for configuring AI runtime engines (see below) |
+
+### Agent Profiles
+
+The `agents` field defines named, reusable agent configurations. Each profile specifies a runtime type and its settings:
+
+```yaml
+agents:
+  - id: claude-default
+    name: Claude Code
+    type: claude
+    default: true
+    permissionMode: bypassPermissions
+    model: ""
+  - id: codex-fast
+    name: Codex
+    type: codex
+    permissionMode: dangerously-bypass
+    model: ""
+```
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `id` | string | Yes | Unique identifier for this profile |
+| `name` | string | Yes | Display name for the profile |
+| `type` | `"claude" \| "codex"` | Yes | Runtime type |
+| `default` | boolean | No | Whether this is the default profile |
+| `permissionMode` | string | No | Permission mode for execution |
+| `model` | string | No | Model to use |
+| `additionalArgs` | string[] | No | Additional CLI arguments |
+
+Cells can reference an agent profile by its `id` using the `agent` attribute (see Cell Tags below).
 
 ### Minimal Valid Frontmatter
 
@@ -97,7 +142,7 @@ mkdir -p anyt_workspace_my_project/src  # Wrong! Creates nested path
 ---
 schema: "2.0"
 name: my-notebook
-workdir: anyt_workspace_my_notebook
+workdir: output
 ---
 ```
 
@@ -137,7 +182,7 @@ schema: "2.0"
 name: web-scraper
 description: Scrape and process website data
 version: 1.0.0
-workdir: anyt_workspace_scraper
+workdir: scraper_output
 env_file: ".env"  # Optional - defaults to .env in notebook directory
 dependencies:
   scraping-tools: "1.0.0"
@@ -162,7 +207,7 @@ Cells execute sequentially from top to bottom.
 
 ### General Syntax
 
-All cells use XML-like tags with a required `id` attribute and an optional `label` attribute:
+All cells use XML-like tags with a required `id` attribute and optional `label` and `agent` attributes:
 
 ```xml
 <{type} id="{unique-id}">
@@ -170,6 +215,10 @@ All cells use XML-like tags with a required `id` attribute and an optional `labe
 </{type}>
 
 <{type} id="{unique-id}" label="{display name}">
+{content}
+</{type}>
+
+<{type} id="{unique-id}" agent="{profile-id}">
 {content}
 </{type}>
 ```
@@ -180,6 +229,8 @@ All cells use XML-like tags with a required `id` attribute and an optional `labe
 |-----------|----------|-------------|
 | `id` | Yes | Unique technical identifier (slug format). Used for file paths, cross-references, and folder names. Not editable from the UI. |
 | `label` | No | Human-friendly display name. Shown as the primary cell name in the UI. Can contain spaces and mixed case. |
+| `agent` | No | Agent profile ID to use for this cell. Overrides the notebook's default agent profile. Must reference a profile defined in the `agents` frontmatter field. |
+| `skip` | No | Set to `"true"` to skip this break cell during execution. Only valid on `break` cells. |
 
 When a `label` is set, the UI shows it as the primary name with the `id` displayed as a subtle suffix. When no label is set, the `id` is shown as the cell name.
 
@@ -222,7 +273,6 @@ Same content, but displayed with a readable label in the UI.
 - Reference files created by previous cells where relevant
 - Use `**Output:** file1, file2` to declare expected output files (parsed by the system)
 - Markdown formatting is preserved and passed to the AI agent
-- **Do NOT include explicit CLI commands** for installed skills — just describe what to do (inputs/outputs) and name the skill. The AI agent reads the skill's SKILL.md and determines the correct commands itself.
 
 **Examples:**
 ```xml
@@ -257,8 +307,6 @@ command2
 - stdout and stderr are captured to `output.log`
 - Exit code 0 = success, non-zero = failure
 - Use for deterministic operations: installing dependencies, running builds, creating directories
-
-**Skill installation:** Use `npx @anytio/pspm@latest add @user/<username>/<skillname> -y` to install skills. Skills are installed to `.pspm/skills/` and symlinked into agent skill directories (`.claude/skills/`, `.codex/skills/`, etc.). Verify with `ls -la .pspm/skills/anyt/<skill-name>/`.
 
 **Example:**
 ```xml
@@ -475,13 +523,25 @@ Description of what the user should review before continuing.
 <break id="unique-id" label="Display Name">
 Same content, but displayed with a readable label in the UI.
 </break>
+
+<break id="unique-id" skip="true">
+This break is skipped during execution (auto-continues).
+</break>
 ```
+
+The `skip` attribute allows individual break cells to be disabled without removing them. When `skip="true"`, the break auto-continues instead of pausing. This is useful when developing a workflow — add breaks during debugging and skip them once a section is stable, without deleting the break.
+
+A global "Skip Breakpoints" toggle in the execution options can also skip all break cells at once, regardless of individual `skip` attributes.
 
 **Example:**
 ```xml
 <break id="verify-setup" label="Verify Setup">
 Review the project structure and configuration files before
 proceeding to add the database layer.
+</break>
+
+<break id="check-output" label="Check Output" skip="true">
+This break was used during development and is now skipped.
 </break>
 ```
 
@@ -601,7 +661,7 @@ Based on the user's input from the "config" step:
 ---
 schema: "2.0"
 name: hello-world
-workdir: anyt_workspace_hello
+workdir: hello-output
 ---
 
 # hello-world
@@ -617,13 +677,14 @@ Create a file called hello.txt with the text "Hello from AnyT!"
 ---
 schema: "2.0"
 name: express-api
-workdir: anyt_workspace_express_api
+workdir: express-api
 ---
 
 # express-api
 
 <shell id="init" label="Initialize Project">
-npm init -y && npm install express typescript @types/express
+mkdir -p express-api
+cd express-api && npm init -y && npm install express typescript @types/express
 </shell>
 
 <task id="create-server" label="Create Express Server">
@@ -636,7 +697,7 @@ Create an Express.js server with TypeScript:
 </task>
 
 <shell id="build" label="Build TypeScript">
-npx tsc
+cd express-api && npx tsc
 </shell>
 
 <task id="add-tests" label="Add Tests">
@@ -653,7 +714,7 @@ Add Vitest tests for the health endpoint:
 - Routes: `src/routes/health.ts`
 - Tests: `tests/health.test.ts`
 
-Run: `npx tsc && node dist/app.js`
+Run: `cd express-api && npx tsc && node dist/app.js`
 </note>
 ```
 
@@ -663,7 +724,7 @@ Run: `npx tsc && node dist/app.js`
 ---
 schema: "2.0"
 name: project-scaffolder
-workdir: anyt_workspace_project_scaffolder
+workdir: my-project
 ---
 
 # project-scaffolder
@@ -732,7 +793,7 @@ Based on the user's input from the config step, create a project:
 </task>
 
 <shell id="install" label="Install Dependencies">
-npm install
+cd my-project && npm install
 </shell>
 
 <break id="review" label="Review Project">
@@ -750,8 +811,9 @@ Add a test setup:
 ## Project Scaffolded!
 
 Run:
-1. `npm run dev`
-2. `npm test`
+1. `cd my-project`
+2. `npm run dev`
+3. `npm test`
 </note>
 ```
 
@@ -761,17 +823,17 @@ Run:
 ---
 schema: "2.0"
 name: data-pipeline
-workdir: anyt_workspace_data_pipeline
+workdir: pipeline-output
 ---
 
 # data-pipeline
 
 <shell id="setup-dirs" label="Create Directories">
-mkdir -p {raw,processed,reports}
+mkdir -p pipeline-output/{raw,processed,reports}
 </shell>
 
 <task id="generate-data" label="Generate Sample Data">
-Create a sample CSV file at raw/sales.csv with:
+Create a sample CSV file at pipeline-output/raw/sales.csv with:
 - Headers: date, product, quantity, price, region
 - 50 rows of realistic sales data
 - Dates spanning the last 30 days
@@ -779,13 +841,13 @@ Create a sample CSV file at raw/sales.csv with:
 
 <shell id="preview">
 echo "=== Preview ==="
-head -10 raw/sales.csv
+head -10 pipeline-output/raw/sales.csv
 echo "=== Row Count ==="
-wc -l raw/sales.csv
+wc -l pipeline-output/raw/sales.csv
 </shell>
 
 <task id="transform" label="Build Transform Script">
-Create transform.js that:
+Create pipeline-output/transform.js that:
 - Reads raw/sales.csv
 - Adds a 'total' column (quantity * price)
 - Filters rows with quantity < 5
@@ -793,18 +855,18 @@ Create transform.js that:
 </task>
 
 <shell id="run-transform">
-node transform.js
+cd pipeline-output && node transform.js
 </shell>
 
 <task id="analyze" label="Analyze Sales Data">
-Create analyze.py that:
+Create pipeline-output/analyze.py that:
 - Reads processed/sales-clean.csv
 - Computes revenue by product and region
 - Writes reports/summary.json and reports/summary.txt
 </task>
 
 <shell id="run-analysis">
-python analyze.py
+cd pipeline-output && python analyze.py
 </shell>
 
 <note id="done" label="Pipeline Complete">
@@ -823,13 +885,15 @@ When generating a notebook, ensure:
 1. **Frontmatter**: Must start with `---` and end with `---`
 2. **`schema: "2.0"`**: Must be present as the first field in frontmatter
 3. **`name`**: Required. Used in the `# heading` after frontmatter
-4. **`workdir`**: Should use the `anyt_workspace_` prefix (e.g., `anyt_workspace_my_project`)
+4. **`workdir`**: Should be set to a meaningful directory name
 5. **Unique IDs**: Every cell `id` must be unique within the file
 6. **Valid cell types**: Only `task`, `shell`, `input`, `note`, `break`
 7. **Closed tags**: Every `<type id="...">` must have a matching `</type>`
 8. **No inline state**: Do NOT include `status`, `duration`, `error`, or `exitCode` attributes on cell tags
 9. **ID format**: Use slug-format IDs: lowercase, alphanumeric, hyphens (e.g., `setup-env`, `create-api`)
 10. **Heading**: Include `# {name}` after the frontmatter, matching the `name` field
-11. **Valid attributes**: Cell tags only accept `id` and `label` attributes. No other attributes are allowed.
+11. **Valid attributes**: Cell tags only accept `id`, `label`, `agent`, and `skip` attributes. No other attributes are allowed.
 12. **Label format**: Labels are free-form text. Use human-readable names (e.g., `"Setup Environment"`, `"Generate Report"`). Labels are optional — when omitted, the cell ID is displayed as the name.
+13. **Agent reference**: The `agent` attribute must reference a valid profile `id` from the `agents` frontmatter field. If omitted, the notebook's default agent profile is used.
+14. **Skip attribute**: The `skip` attribute is only valid on `break` cells. Its only valid value is `"true"`. When present on non-break cells, it is ignored.
 
