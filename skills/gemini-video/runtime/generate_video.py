@@ -7,162 +7,38 @@ Requires GEMINI_API_KEY environment variable.
 """
 
 import argparse
-import os
 import sys
-import time
+from datetime import datetime
 from pathlib import Path
 
 from google import genai
-from google.genai import types
 
-SKILL_DIR = Path(__file__).resolve().parent.parent
-DEFAULT_OUTPUT_DIR = SKILL_DIR / "output"
+from api import generate_video, save_video
+from config import (
+    AVAILABLE_MODELS,
+    DEFAULT_MODEL,
+    DEFAULT_OUTPUT_DIR,
+    DEFAULT_POLL_INTERVAL,
+    MAX_REFERENCE_IMAGES,
+    PERSON_GENERATION_OPTIONS,
+    SUPPORTED_ASPECT_RATIOS,
+    SUPPORTED_DURATIONS,
+    SUPPORTED_RESOLUTIONS,
+    ApiError,
+    ConfigError,
+    GeminiVideoError,
+    OutputError,
+    ValidationError,
+    get_api_key,
+)
+from media import validate_input_image
 
-DEFAULT_MODEL = "veo-3.1-generate-preview"
-
-AVAILABLE_MODELS = [
-    "veo-3.1-generate-preview",
-    "veo-3.1-fast-generate-preview",
-]
-
-SUPPORTED_ASPECT_RATIOS = ["16:9", "9:16"]
-
-SUPPORTED_RESOLUTIONS = ["720p", "1080p", "4k"]
-
-SUPPORTED_DURATIONS = [4, 6, 8]
-
-PERSON_GENERATION_OPTIONS = ["allow_all", "allow_adult", "dont_allow"]
-
-MAX_REFERENCE_IMAGES = 3
-
-SUPPORTED_INPUT_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp", ".gif"}
-MAX_INPUT_SIZE_MB = 20
-
-MIME_TYPES: dict[str, str] = {
-    ".png": "image/png",
-    ".jpg": "image/jpeg",
-    ".jpeg": "image/jpeg",
-    ".webp": "image/webp",
-    ".gif": "image/gif",
+_ERROR_PREFIXES: dict[type[GeminiVideoError], str] = {
+    ConfigError: "Configuration error",
+    ValidationError: "Validation error",
+    ApiError: "API error",
+    OutputError: "Output error",
 }
-
-DEFAULT_POLL_INTERVAL = 10
-
-
-def get_api_key() -> str | None:
-    """Return the Gemini API key from environment, or None if not set."""
-    return os.environ.get("GEMINI_API_KEY")
-
-
-def validate_input_image(path: Path) -> str | None:
-    """Return an error message if the input image is invalid, else None."""
-    if not path.exists():
-        return f"Input image not found: {path}"
-    if not path.is_file():
-        return f"Not a file: {path}"
-    if path.suffix.lower() not in SUPPORTED_INPUT_EXTENSIONS:
-        return (
-            f"Unsupported format '{path.suffix}': {path} (supported: {', '.join(sorted(SUPPORTED_INPUT_EXTENSIONS))})"
-        )
-    size_mb = path.stat().st_size / (1024 * 1024)
-    if size_mb > MAX_INPUT_SIZE_MB:
-        return f"Input image too large: {size_mb:.1f}MB (max: {MAX_INPUT_SIZE_MB}MB)"
-    return None
-
-
-def load_image(path: Path) -> types.Image:
-    """Load an image file and return a Gemini Image object."""
-    mime_type = MIME_TYPES[path.suffix.lower()]
-    data = path.read_bytes()
-    return types.Image(image_bytes=data, mime_type=mime_type)
-
-
-def build_reference_images(paths: list[Path]) -> list[types.VideoGenerationReferenceImage]:
-    """Load image files and return VideoGenerationReferenceImage objects."""
-    refs: list[types.VideoGenerationReferenceImage] = []
-    for path in paths:
-        image = load_image(path)
-        refs.append(
-            types.VideoGenerationReferenceImage(image=image, reference_type=types.VideoGenerationReferenceType.ASSET)
-        )
-    return refs
-
-
-def generate_video(
-    client: genai.Client,
-    prompt: str,
-    model: str = DEFAULT_MODEL,
-    input_image: Path | None = None,
-    last_frame: Path | None = None,
-    reference_images: list[Path] | None = None,
-    aspect_ratio: str | None = None,
-    resolution: str | None = None,
-    duration_seconds: int | None = None,
-    negative_prompt: str | None = None,
-    person_generation: str | None = None,
-    poll_interval: int = DEFAULT_POLL_INTERVAL,
-) -> types.GenerateVideosResponse:
-    """Generate a video using the Gemini Veo 3.1 API. Polls until complete."""
-    config_kwargs: dict[str, object] = {}
-    if aspect_ratio:
-        config_kwargs["aspect_ratio"] = aspect_ratio
-    if resolution:
-        config_kwargs["resolution"] = resolution
-    if duration_seconds:
-        config_kwargs["duration_seconds"] = duration_seconds
-    if negative_prompt:
-        config_kwargs["negative_prompt"] = negative_prompt
-    if person_generation:
-        config_kwargs["person_generation"] = person_generation
-    if last_frame:
-        config_kwargs["last_frame"] = load_image(last_frame)
-    if reference_images:
-        config_kwargs["reference_images"] = build_reference_images(reference_images)
-
-    config = types.GenerateVideosConfig(**config_kwargs) if config_kwargs else None  # type: ignore[arg-type]
-
-    image = load_image(input_image) if input_image else None
-
-    operation = client.models.generate_videos(
-        model=model,
-        prompt=prompt,
-        image=image,
-        config=config,
-    )
-
-    while not operation.done:
-        print(f"  Waiting for video generation to complete (polling every {poll_interval}s)...")
-        time.sleep(poll_interval)
-        operation = client.operations.get(operation)
-
-    return operation.response  # type: ignore[return-value]
-
-
-def save_video(
-    client: genai.Client,
-    response: types.GenerateVideosResponse,
-    output_dir: Path,
-    filename: str,
-) -> Path | None:
-    """Download and save the first generated video. Returns the saved path or None."""
-    output_dir.mkdir(parents=True, exist_ok=True)
-
-    if not response.generated_videos:
-        print("  No videos were generated.")
-        return None
-
-    generated_video = response.generated_videos[0]
-    video_file = generated_video.video  # type: ignore[union-attr]
-
-    if video_file is None:
-        print("  Video object is empty.")
-        return None
-
-    client.files.download(file=video_file)
-    out_path = output_dir / filename
-    video_file.save(str(out_path))
-    print(f"  Saved: {out_path}")
-    return out_path
 
 
 def main() -> int:
@@ -254,81 +130,71 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    # --- Validation ---
-    api_key = get_api_key()
-    if not api_key:
-        print("Error: GEMINI_API_KEY environment variable is not set.", file=sys.stderr)
-        print("Get an API key at: https://aistudio.google.com/apikey", file=sys.stderr)
-        return 1
-
-    if args.last_frame and not args.image:
-        print("Error: --last-frame requires --image (first frame).", file=sys.stderr)
-        return 1
-
-    ref_paths: list[Path] = []
-    if args.references:
-        if len(args.references) > MAX_REFERENCE_IMAGES:
-            print(f"Error: At most {MAX_REFERENCE_IMAGES} reference images allowed.", file=sys.stderr)
-            return 1
-        for ref in args.references:
-            p = Path(ref)
-            error = validate_input_image(p)
-            if error:
-                print(f"Error (reference): {error}", file=sys.stderr)
-                return 1
-            ref_paths.append(p)
-
-    input_path: Path | None = None
-    if args.image:
-        input_path = Path(args.image)
-        error = validate_input_image(input_path)
-        if error:
-            print(f"Error: {error}", file=sys.stderr)
-            return 1
-
-    last_frame_path: Path | None = None
-    if args.last_frame:
-        last_frame_path = Path(args.last_frame)
-        error = validate_input_image(last_frame_path)
-        if error:
-            print(f"Error (last-frame): {error}", file=sys.stderr)
-            return 1
-
-    # --- Print summary ---
-    if input_path and last_frame_path:
-        mode = "interpolation (first+last frame)"
-    elif input_path:
-        mode = "image-to-video"
-    elif ref_paths:
-        mode = "text-to-video with reference images"
-    else:
-        mode = "text-to-video"
-
-    print(f"Mode: {mode}")
-    print(f"Model: {args.model}")
-    print(f"Prompt: {args.prompt}")
-    if args.aspect_ratio:
-        print(f"Aspect ratio: {args.aspect_ratio}")
-    if args.resolution:
-        print(f"Resolution: {args.resolution}")
-    if args.duration:
-        print(f"Duration: {args.duration}s")
-    if args.negative_prompt:
-        print(f"Negative prompt: {args.negative_prompt}")
-    if args.person_generation:
-        print(f"Person generation: {args.person_generation}")
-    if input_path:
-        print(f"First frame: {input_path}")
-    if last_frame_path:
-        print(f"Last frame: {last_frame_path}")
-    if ref_paths:
-        print(f"Reference images: {', '.join(str(p) for p in ref_paths)}")
-    print(f"Output: {args.output}\n")
-
-    # --- Generate ---
-    client = genai.Client(api_key=api_key)
-
     try:
+        # Stage 1: Check configuration
+        api_key = get_api_key()
+        if not api_key:
+            raise ConfigError(
+                "GEMINI_API_KEY environment variable is not set.\n"
+                "  Get an API key at: https://aistudio.google.com/apikey"
+            )
+
+        if args.last_frame and not args.image:
+            raise ConfigError("--last-frame requires --image (first frame).")
+
+        # Stage 2: Validate inputs
+        ref_paths: list[Path] = []
+        if args.references:
+            if len(args.references) > MAX_REFERENCE_IMAGES:
+                raise ValidationError(f"At most {MAX_REFERENCE_IMAGES} reference images allowed.")
+            for ref in args.references:
+                p = Path(ref)
+                validate_input_image(p)
+                ref_paths.append(p)
+
+        input_path: Path | None = None
+        if args.image:
+            input_path = Path(args.image)
+            validate_input_image(input_path)
+
+        last_frame_path: Path | None = None
+        if args.last_frame:
+            last_frame_path = Path(args.last_frame)
+            validate_input_image(last_frame_path)
+
+        # Stage 3: Print summary
+        if input_path and last_frame_path:
+            mode = "interpolation (first+last frame)"
+        elif input_path:
+            mode = "image-to-video"
+        elif ref_paths:
+            mode = "text-to-video with reference images"
+        else:
+            mode = "text-to-video"
+
+        print(f"Mode: {mode}")
+        print(f"Model: {args.model}")
+        print(f"Prompt: {args.prompt}")
+        if args.aspect_ratio:
+            print(f"Aspect ratio: {args.aspect_ratio}")
+        if args.resolution:
+            print(f"Resolution: {args.resolution}")
+        if args.duration:
+            print(f"Duration: {args.duration}s")
+        if args.negative_prompt:
+            print(f"Negative prompt: {args.negative_prompt}")
+        if args.person_generation:
+            print(f"Person generation: {args.person_generation}")
+        if input_path:
+            print(f"First frame: {input_path}")
+        if last_frame_path:
+            print(f"Last frame: {last_frame_path}")
+        if ref_paths:
+            print(f"Reference images: {', '.join(str(p) for p in ref_paths)}")
+        print(f"Output: {args.output}\n")
+
+        # Stage 4: Generate video
+        client = genai.Client(api_key=api_key)
         response = generate_video(
             client=client,
             prompt=args.prompt,
@@ -343,28 +209,22 @@ def main() -> int:
             person_generation=args.person_generation,
             poll_interval=args.poll_interval,
         )
-    except Exception as e:
-        print(f"Error: API call failed: {e}", file=sys.stderr)
+
+        if response is None:
+            raise OutputError("No response from API.")
+
+        # Stage 5: Save output
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = args.filename or f"veo_{timestamp}.mp4"
+        output_dir = Path(args.output)
+        saved = save_video(client, response, output_dir, filename)
+        print(f"\nDone! Video saved to {saved}")
+        return 0
+
+    except GeminiVideoError as e:
+        prefix = _ERROR_PREFIXES.get(type(e), "Error")
+        print(f"\n{prefix}: {e}", file=sys.stderr)
         return 1
-
-    if response is None:
-        print("\nError: No response from API.", file=sys.stderr)
-        return 1
-
-    from datetime import datetime
-
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = args.filename or f"veo_{timestamp}.mp4"
-
-    output_dir = Path(args.output)
-    saved = save_video(client, response, output_dir, filename)
-
-    if saved is None:
-        print("\nNo video was generated. Try adjusting your prompt.")
-        return 1
-
-    print(f"\nDone! Video saved to {saved}")
-    return 0
 
 
 if __name__ == "__main__":

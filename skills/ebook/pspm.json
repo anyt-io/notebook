@@ -1,7 +1,7 @@
 {
   "$schema": "https://pspm.dev/schema/v1/pspm.json",
   "name": "ebook",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Convert markdown files to EPUB and PDF ebooks",
   "author": "Bin Sheng <supercarl87@gmail.com>",
   "license": "Apache-2.0",

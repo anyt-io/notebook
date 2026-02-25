@@ -6,212 +6,46 @@ Run with: uv run --project runtime runtime/init_skill.py <skill-name> --path <ou
 """
 
 import argparse
-import re
 import sys
 from pathlib import Path
 
-SKILL_DIR = Path(__file__).resolve().parent.parent
-
-SKILL_MD_TEMPLATE = """\
----
-name: {name}
-description: TODO — describe what this skill does and when to use it. Include specific triggers and capabilities.
----
-
-# {title}
-
-## Prerequisites
-
-TODO — list required tools (e.g. uv, ffmpeg, bun).
-
-## Usage
-
-Run from the skill folder (`skills/{name}/`):
-
-```bash
-uv run --project runtime runtime/<script>.py [args]
-```
-
-## Limitations
-
-TODO — note any constraints or known limitations.
-"""
-
-PSPM_JSON_TEMPLATE = """\
-{{
-  "$schema": "https://pspm.dev/schema/v1/pspm.json",
-  "name": "{name}",
-  "version": "0.1.0",
-  "description": "TODO — brief description",
-  "author": "TODO",
-  "license": "Apache-2.0",
-  "type": "skill",
-  "capabilities": [],
-  "main": "SKILL.md",
-  "requirements": {{
-    "pspm": ">=0.1.0"
-  }},
-  "files": [
-    "SKILL.md",
-    "runtime"
-  ],
-  "dependencies": {{}},
-  "private": false
-}}
-"""
-
-PSPMIGNORE_TEMPLATE = """\
-# Dev environment
-runtime/.venv/
-runtime/.ruff_cache/
-runtime/__pycache__/
-runtime/.pytest_cache/
-
-# Tests
-runtime/tests/
-
-# Dev config
-runtime/.python-version
-
-# Lockfile (consumers resolve their own deps)
-runtime/uv.lock
-
-# Skill output
-output/
-"""
-
-PYPROJECT_TEMPLATE = """\
-[project]
-name = "{name}"
-version = "0.1.0"
-description = "TODO — brief description"
-requires-python = ">=3.10"
-dependencies = []
-
-[dependency-groups]
-dev = [
-    "pyright>=1.1.408",
-    "pytest>=9.0.2",
-    "ruff>=0.15.0",
-]
-
-[tool.ruff]
-target-version = "py310"
-line-length = 120
-
-[tool.ruff.lint]
-select = ["E", "W", "F", "I", "UP", "B", "SIM", "RUF"]
-
-[tool.pytest.ini_options]
-pythonpath = ["."]
-testpaths = ["tests"]
-
-[tool.pyright]
-pythonVersion = "3.10"
-include = ["."]
-typeCheckingMode = "standard"
-"""
-
-PACKAGE_JSON_TEMPLATE = """\
-{{
-  "name": "{name}",
-  "version": "0.1.0",
-  "description": "TODO — brief description",
-  "type": "module"
-}}
-"""
-
-EXAMPLE_SCRIPT_PY = """\
-#!/usr/bin/env python3
-\"\"\"
-Example script for {name}.
-Run with: uv run --project runtime runtime/example.py
-\"\"\"
-
-import argparse
-import sys
-from pathlib import Path
-
-SKILL_DIR = Path(__file__).resolve().parent.parent
-DEFAULT_OUTPUT_DIR = SKILL_DIR / "output"
+from config import InitError, SkillCreatorError, validate_name
+from templates import (
+    CONFIG_PY_TEMPLATE,
+    EXAMPLE_SCRIPT_PY,
+    EXAMPLE_SCRIPT_TS,
+    PACKAGE_JSON_TEMPLATE,
+    PSPM_JSON_TEMPLATE,
+    PSPMIGNORE_TEMPLATE,
+    PYPROJECT_TEMPLATE,
+    SKILL_MD_TEMPLATE,
+    TEST_CONFIG_PY,
+    TEST_EXAMPLE,
+    TEST_INIT,
+)
 
 
-def main():
-    parser = argparse.ArgumentParser(description="TODO — describe this script")
-    parser.add_argument("-o", "--output", default=str(DEFAULT_OUTPUT_DIR), help="Output directory")
-    args = parser.parse_args()
-
-    Path(args.output).mkdir(parents=True, exist_ok=True)
-    print("TODO — implement this script")
+def _error_base_name(name: str) -> str:
+    """Derive the base error class name from the skill name, e.g. 'my-tool' -> 'MyToolError'."""
+    return name.replace("-", " ").title().replace(" ", "") + "Error"
 
 
-if __name__ == "__main__":
-    main()
-"""
-
-EXAMPLE_SCRIPT_TS = """\
-#!/usr/bin/env bun
-/**
- * Example script for {name}.
- * Run with: bun run runtime/example.ts
- */
-
-import {{ parseArgs }} from "util";
-
-const {{ values }} = parseArgs({{
-  args: Bun.argv.slice(2),
-  options: {{
-    output: {{ type: "string", short: "o", default: "output" }},
-  }},
-}});
-
-console.log("TODO — implement this script");
-"""
-
-TEST_INIT = ""
-
-TEST_EXAMPLE = """\
-from pathlib import Path
-
-
-class TestExample:
-    def test_placeholder(self):
-        # TODO — replace with real tests
-        assert True
-"""
-
-
-def validate_name(name: str) -> tuple[bool, str]:
-    """Validate skill name is kebab-case, max 64 chars."""
-    if len(name) > 64:
-        return False, "Skill name must be 64 characters or fewer"
-    if not re.match(r"^[a-z0-9]+(-[a-z0-9]+)*$", name):
-        return False, (
-            "Skill name must be kebab-case (lowercase letters, digits, single hyphens, no leading/trailing hyphens)"
-        )
-    return True, ""
-
-
-def init_skill(name: str, base_path: Path, skill_type: str = "py") -> bool:
+def init_skill(name: str, base_path: Path, skill_type: str = "py") -> Path:
     """
     Initialize a new PSPM skill directory.
 
-    Args:
-        name: Skill name (kebab-case)
-        base_path: Parent directory where skill folder will be created
-        skill_type: "py" for Python/uv or "ts" for TypeScript/bun
+    Returns the path to the created skill directory.
+    Raises InitError on failure.
     """
-    valid, msg = validate_name(name)
-    if not valid:
-        print(f"Error: {msg}")
-        return False
+    validate_name(name)
 
     skill_path = base_path / name
     if skill_path.exists():
-        print(f"Error: Directory already exists: {skill_path}")
-        return False
+        raise InitError(f"Directory already exists: {skill_path}")
 
     title = name.replace("-", " ").title()
+    error_base = _error_base_name(name)
+    underscored_name = name.replace("-", "_")
 
     # Create directories
     runtime_path = skill_path / "runtime"
@@ -233,8 +67,12 @@ def init_skill(name: str, base_path: Path, skill_type: str = "py") -> bool:
     # Runtime files
     if skill_type == "py":
         (runtime_path / "pyproject.toml").write_text(PYPROJECT_TEMPLATE.format(name=name))
-        (runtime_path / "example.py").write_text(EXAMPLE_SCRIPT_PY.format(name=name))
+        (runtime_path / "config.py").write_text(CONFIG_PY_TEMPLATE.format(name=name, error_base=error_base))
+        (runtime_path / "example.py").write_text(EXAMPLE_SCRIPT_PY.format(name=name, error_base=error_base))
         (tests_path / "__init__.py").write_text(TEST_INIT)
+        (tests_path / "test_config.py").write_text(
+            TEST_CONFIG_PY.format(name=name, error_base=error_base, underscored_name=underscored_name)
+        )
         (tests_path / "test_example.py").write_text(TEST_EXAMPLE)
     else:
         (runtime_path / "package.json").write_text(PACKAGE_JSON_TEMPLATE.format(name=name))
@@ -246,6 +84,7 @@ def init_skill(name: str, base_path: Path, skill_type: str = "py") -> bool:
     print("  .pspmignore       — publishing exclusions")
     print(f"  runtime/          — isolated {skill_type} environment")
     if skill_type == "py":
+        print("  runtime/config.py — constants and exception hierarchy")
         print("  runtime/tests/    — pytest tests")
     print("\nNext steps:")
     if skill_type == "py":
@@ -254,10 +93,10 @@ def init_skill(name: str, base_path: Path, skill_type: str = "py") -> bool:
     else:
         print(f"  cd {skill_path}/runtime && bun install")
         print("  bun add <your-dependencies>")
-    return True
+    return skill_path
 
 
-def main() -> None:
+def main() -> int:
     parser = argparse.ArgumentParser(description="Initialize a new PSPM skill")
     parser.add_argument("name", help="Skill name (kebab-case, e.g. my-cool-skill)")
     parser.add_argument("--path", default=".", help="Parent directory for the skill folder (default: current dir)")
@@ -269,9 +108,14 @@ def main() -> None:
     )
 
     args = parser.parse_args()
-    success = init_skill(args.name, Path(args.path), args.type)
-    sys.exit(0 if success else 1)
+
+    try:
+        init_skill(args.name, Path(args.path), args.type)
+        return 0
+    except SkillCreatorError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

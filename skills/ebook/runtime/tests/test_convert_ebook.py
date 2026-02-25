@@ -5,9 +5,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from config import ConversionError, ValidationError
 from convert_ebook import (
-    DEFAULT_OUTPUT_DIR,
-    SKILL_DIR,
     _build_extra_args,
     _output_filename,
     convert_ebook,
@@ -18,84 +17,69 @@ from convert_ebook import (
 )
 
 
-class TestDefaultOutputDir:
-    def test_output_dir_under_skill_dir(self):
-        assert DEFAULT_OUTPUT_DIR == SKILL_DIR / "output"
-
-    def test_skill_dir_is_ebook(self):
-        assert SKILL_DIR.name == "ebook"
-
-
 class TestValidateInput:
     def test_valid_md(self, tmp_path: Path):
         p = tmp_path / "test.md"
         p.write_text("# Hello")
-        assert validate_input(p) is None
+        validate_input(p)  # should not raise
 
     def test_valid_markdown_ext(self, tmp_path: Path):
         p = tmp_path / "test.markdown"
         p.write_text("# Hello")
-        assert validate_input(p) is None
+        validate_input(p)  # should not raise
 
     def test_missing_file(self, tmp_path: Path):
-        result = validate_input(tmp_path / "nonexistent.md")
-        assert result is not None
-        assert "not found" in result.lower()
+        with pytest.raises(ValidationError, match="not found"):
+            validate_input(tmp_path / "nonexistent.md")
 
     def test_not_a_file(self, tmp_path: Path):
-        result = validate_input(tmp_path)
-        assert result is not None
-        assert "Not a file" in result
+        with pytest.raises(ValidationError, match="Not a file"):
+            validate_input(tmp_path)
 
     def test_unsupported_extension(self, tmp_path: Path):
         p = tmp_path / "test.txt"
         p.write_text("hello")
-        result = validate_input(p)
-        assert result is not None
-        assert "Unsupported format" in result
+        with pytest.raises(ValidationError, match="Unsupported format"):
+            validate_input(p)
 
 
 class TestValidateCoverImage:
     def test_valid_cover(self, tmp_path: Path):
         p = tmp_path / "cover.png"
         p.write_bytes(b"\x89PNG")
-        assert validate_cover_image(p) is None
+        validate_cover_image(p)  # should not raise
 
     def test_valid_jpg_cover(self, tmp_path: Path):
         p = tmp_path / "cover.jpg"
         p.write_bytes(b"\xff\xd8")
-        assert validate_cover_image(p) is None
+        validate_cover_image(p)  # should not raise
 
     def test_missing_cover(self, tmp_path: Path):
-        result = validate_cover_image(tmp_path / "missing.png")
-        assert result is not None
-        assert "not found" in result.lower()
+        with pytest.raises(ValidationError, match="not found"):
+            validate_cover_image(tmp_path / "missing.png")
 
     def test_wrong_extension(self, tmp_path: Path):
         p = tmp_path / "cover.txt"
         p.write_text("not an image")
-        result = validate_cover_image(p)
-        assert result is not None
-        assert "Unsupported cover image format" in result
+        with pytest.raises(ValidationError, match="Unsupported cover image format"):
+            validate_cover_image(p)
 
 
 class TestValidateCssFile:
     def test_valid_css(self, tmp_path: Path):
         p = tmp_path / "style.css"
         p.write_text("body { color: red; }")
-        assert validate_css_file(p) is None
+        validate_css_file(p)  # should not raise
 
     def test_missing_css(self, tmp_path: Path):
-        result = validate_css_file(tmp_path / "missing.css")
-        assert result is not None
-        assert "not found" in result.lower()
+        with pytest.raises(ValidationError, match="not found"):
+            validate_css_file(tmp_path / "missing.css")
 
     def test_wrong_extension(self, tmp_path: Path):
         p = tmp_path / "style.scss"
         p.write_text("body { color: red; }")
-        result = validate_css_file(p)
-        assert result is not None
-        assert "Not a CSS file" in result
+        with pytest.raises(ValidationError, match="Not a CSS file"):
+            validate_css_file(p)
 
 
 class TestResolveResourcePath:
@@ -276,10 +260,10 @@ class TestConvertEbook:
         assert out.exists()
 
     @patch("convert_ebook.pypandoc.convert_file", side_effect=RuntimeError("pandoc failed"))
-    def test_conversion_error_propagates(self, mock_convert: MagicMock, tmp_path: Path):
+    def test_conversion_error_wraps_exception(self, mock_convert: MagicMock, tmp_path: Path):
         md = tmp_path / "test.md"
         md.write_text("# Hello")
         out = tmp_path / "out"
 
-        with pytest.raises(RuntimeError, match="pandoc failed"):
+        with pytest.raises(ConversionError, match="pandoc failed"):
             convert_ebook([md], "epub", out)

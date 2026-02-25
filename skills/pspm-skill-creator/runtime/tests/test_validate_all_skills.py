@@ -1,3 +1,5 @@
+"""Tests for validate_all_skills.py."""
+
 from pathlib import Path
 
 from validate_all_skills import validate_all_skills

@@ -3,14 +3,16 @@
 from pathlib import Path
 from unittest.mock import patch
 
+import pytest
+
 from concat_videos import (
-    SUPPORTED_EXTENSIONS,
     build_concat_file,
     check_ffmpeg,
     concat_videos,
     find_videos_in_directory,
     validate_video_files,
 )
+from config import SUPPORTED_VIDEO_EXTENSIONS, ConfigError, ValidationError
 
 
 def make_fake_video(path: Path) -> Path:
@@ -22,49 +24,44 @@ def make_fake_video(path: Path) -> Path:
 class TestCheckFfmpeg:
     @patch("concat_videos.shutil.which", return_value="/usr/bin/ffmpeg")
     def test_ffmpeg_available(self, _mock_which):
-        assert check_ffmpeg() is None
+        check_ffmpeg()  # should not raise
 
     @patch("concat_videos.shutil.which", return_value=None)
     def test_ffmpeg_not_available(self, _mock_which):
-        result = check_ffmpeg()
-        assert result is not None
-        assert "ffmpeg" in result.lower()
+        with pytest.raises(ConfigError, match="ffmpeg"):
+            check_ffmpeg()
 
 
 class TestValidateVideoFiles:
     def test_valid_mp4_files(self, tmp_path: Path):
         paths = [make_fake_video(tmp_path / f"vid{i}.mp4") for i in range(3)]
-        assert validate_video_files(paths) is None
+        validate_video_files(paths)  # should not raise
 
     def test_valid_mov_file(self, tmp_path: Path):
         path = make_fake_video(tmp_path / "clip.mov")
-        assert validate_video_files([path]) is None
+        validate_video_files([path])  # should not raise
 
     def test_file_not_found(self, tmp_path: Path):
-        result = validate_video_files([tmp_path / "missing.mp4"])
-        assert result is not None
-        assert "not found" in result.lower()
+        with pytest.raises(ValidationError, match="not found"):
+            validate_video_files([tmp_path / "missing.mp4"])
 
     def test_not_a_file(self, tmp_path: Path):
-        result = validate_video_files([tmp_path])
-        assert result is not None
-        assert "Not a file" in result
+        with pytest.raises(ValidationError, match="Not a file"):
+            validate_video_files([tmp_path])
 
     def test_unsupported_extension(self, tmp_path: Path):
         path = tmp_path / "video.flv"
         path.write_bytes(b"fake")
-        result = validate_video_files([path])
-        assert result is not None
-        assert "Unsupported format" in result
+        with pytest.raises(ValidationError, match="Unsupported format"):
+            validate_video_files([path])
 
     def test_empty_list(self):
-        result = validate_video_files([])
-        assert result is not None
-        assert "No video files" in result
+        with pytest.raises(ValidationError, match="No video files"):
+            validate_video_files([])
 
     def test_supported_extensions_cover_common_formats(self):
         for ext in [".mp4", ".mov", ".avi", ".mkv", ".webm"]:
-            assert ext in SUPPORTED_EXTENSIONS
+            assert ext in SUPPORTED_VIDEO_EXTENSIONS
 
 
 class TestFindVideosInDirectory:
@@ -184,6 +181,4 @@ class TestConcatVideos:
         output = tmp_path / "out.mp4"
 
         concat_videos(videos, output)
-        # Temp file should be cleaned up — verify no .txt files left in temp dir
-        # (this is implicit; the finally block handles cleanup)
         mock_run.assert_called_once()
