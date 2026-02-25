@@ -15,7 +15,7 @@ When you ask an AI agent to do something complex, the one-shot chatbot model fal
 - **No recovery** -- If step 4 of 8 fails, you redo everything
 - **No separation** -- AI handles things a simple shell command could do faster
 
-AnyT Notebook solves this with a Jupyter-style notebook for AI agent workflows. Break tasks into cells, add human checkpoints, mix AI and shell scripts, and run with full control. Edit cells with a rich text editor featuring code blocks with syntax highlighting, or toggle to raw markdown. Give cells human-friendly labels so your notebook reads like a plan. Configure agent profiles per-notebook or per-cell to use different runtimes and settings where they matter most.
+AnyT Notebook solves this with a Jupyter-style notebook for AI agent workflows. Break tasks into cells, add human checkpoints, mix AI and shell scripts, and run with full control. Edit cells with a rich text editor featuring code blocks with syntax highlighting, or toggle to raw markdown. Give cells human-friendly labels so your notebook reads like a plan. Configure agent profiles per-notebook or per-cell to use different runtimes and settings where they matter most. Enable **session mode** to maintain Claude context across task cells, browse generated files in the **Files tab**, and get Jupyter-style **shell error display** with line highlighting when scripts fail.
 
 ## Supported Runtimes
 
@@ -68,7 +68,7 @@ Task cells are executed by your AI agent (Claude Code or Codex). Write a natural
 
 ### Shell
 
-Shell cells run scripts directly -- no AI involved. They're fast, deterministic, and ideal for commands you already know. Use them for installs, builds, tests, linting, or any CLI operation.
+Shell cells run scripts directly -- no AI involved. They're fast, deterministic, and ideal for commands you already know. Use them for installs, builds, tests, linting, or any CLI operation. When a script fails, a Jupyter-style error display highlights the exact failing line.
 
 > *Example: `npm install && npm run build && npm test`*
 
@@ -125,6 +125,9 @@ Open Command Palette -> **"AnyT: Open Sample Notebook"** -> pick one -> click Ru
 |---------|---------|-------------|
 | `anyt.agent` | `"claude"` | AI agent (`claude` or `codex`) |
 | `anyt.autoVersion` | `true` | Auto-version on changes |
+| `anyt.shell.path` | `""` | Custom shell path for shell cells |
+| `anyt.shell.loginShell` | `true` | Use login shell to source profile files |
+| `anyt.claude.sessionMode` | `false` | Maintain Claude context across task cells |
 
 ---
 
@@ -155,6 +158,13 @@ AnyT Notebook supports [PSPM](https://github.com/anyt-io/pspm-cli) skills — re
 | [youtube-downloader](skills/youtube-downloader/) | Download YouTube videos and transcripts in various formats and qualities |
 | [pspm-skill-creator](skills/pspm-skill-creator/) | Scaffold, validate, and package PSPM skills with isolated runtime environments |
 | [create-anyt-notebook](skills/create-anyt-notebook/) | Create new AnyT Notebook files from templates |
+| [remove-background](skills/remove-background/) | Remove image backgrounds using AI |
+| [upscale-image](skills/upscale-image/) | Upscale images using AI super-resolution |
+| [rednote](skills/rednote/) | Generate RedNote-style carousel posts from web content |
+| [ebook](skills/ebook/) | Convert podcast transcripts to formatted ebooks |
+| [gemini-image](skills/gemini-image/) | Generate and edit images with Google Gemini |
+| [gemini-video](skills/gemini-video/) | Generate videos with Google Gemini and concatenation support |
+| [keling-video](skills/keling-video/) | Generate videos with Kling AI and keyframe control |
 
 Install a skill with PSPM:
 

@@ -1,8 +1,8 @@
 # AnyT Notebook File Specification
 
-> **Spec version**: `2.1`
+> **Spec version**: `2.3`
 > **Schema version**: `2.0`
-> **Last updated**: 2026-02-10
+> **Last updated**: 2026-02-19
 > **Purpose**: Complete specification for generating valid `.anyt.md` notebook files.
 > This document is designed to be consumed by AI systems as a reference for
 > creating, editing, and validating AnyT notebooks.
@@ -11,10 +11,24 @@
 
 | Spec Version | Schema Version | Date | Description |
 |--------------|----------------|------|-------------|
-| **2.1** | **2.0** | 2026-02-10 | Add `label` attribute. Cell IDs read-only in UI. |
+| **2.3** | **2.0** | 2026-02-19 | Add `skip` attribute for break cells, global skip breakpoints toggle. Multi-document sessions. |
+| 2.2 | 2.0 | 2026-02-13 | Add `agent` attribute, `agents` frontmatter, health checks. Remove v1 schema. |
+| 2.1 | 2.0 | 2026-02-10 | Add `label` attribute. Cell IDs read-only in UI. |
 | 2.0 | 2.0 | 2026-02-05 | Initial schema 2.0. Structure-only file with folder-based state. |
 
 ### Changelog
+
+#### 2.3 (2026-02-19)
+- **Added** optional `skip` attribute on break cells to skip them during execution
+- **Added** global "Skip Breakpoints" toggle in execution options to skip all break cells
+- **Added** validation rule 14 for `skip` attribute (break cells only)
+
+#### 2.2 (2026-02-13)
+- **Added** optional `agent` attribute on all cell types for per-cell agent profile override
+- **Added** `agents` frontmatter field for defining named agent profiles
+- **Added** validation rule 13 for agent profile references
+- **Removed** v1 schema support (`SchemaVersion` is now `"2.0"` only)
+- **Removed** `inputs` frontmatter field (replaced by form-based input cells)
 
 #### 2.1 (2026-02-10)
 - **Added** optional `label` attribute on all cell types for human-friendly display names
@@ -89,6 +103,38 @@ cat my-project/config.json  # Wrong! Looks for my-project/my-project/config.json
 ```
 | `env_file` | string | No | `".env"` | Path to .env file (relative to notebook or absolute) |
 | `dependencies` | object | No | — | Skill dependencies as `name: version` pairs |
+| `agents` | array | No | — | Agent profiles for configuring AI runtime engines (see below) |
+
+### Agent Profiles
+
+The `agents` field defines named, reusable agent configurations. Each profile specifies a runtime type and its settings:
+
+```yaml
+agents:
+  - id: claude-default
+    name: Claude Code
+    type: claude
+    default: true
+    permissionMode: bypassPermissions
+    model: ""
+  - id: codex-fast
+    name: Codex
+    type: codex
+    permissionMode: dangerously-bypass
+    model: ""
+```
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `id` | string | Yes | Unique identifier for this profile |
+| `name` | string | Yes | Display name for the profile |
+| `type` | `"claude" \| "codex"` | Yes | Runtime type |
+| `default` | boolean | No | Whether this is the default profile |
+| `permissionMode` | string | No | Permission mode for execution |
+| `model` | string | No | Model to use |
+| `additionalArgs` | string[] | No | Additional CLI arguments |
+
+Cells can reference an agent profile by its `id` using the `agent` attribute (see Cell Tags below).
 
 ### Minimal Valid Frontmatter
 
@@ -161,7 +207,7 @@ Cells execute sequentially from top to bottom.
 
 ### General Syntax
 
-All cells use XML-like tags with a required `id` attribute and an optional `label` attribute:
+All cells use XML-like tags with a required `id` attribute and optional `label` and `agent` attributes:
 
 ```xml
 <{type} id="{unique-id}">
@@ -169,6 +215,10 @@ All cells use XML-like tags with a required `id` attribute and an optional `labe
 </{type}>
 
 <{type} id="{unique-id}" label="{display name}">
+{content}
+</{type}>
+
+<{type} id="{unique-id}" agent="{profile-id}">
 {content}
 </{type}>
 ```
@@ -179,6 +229,8 @@ All cells use XML-like tags with a required `id` attribute and an optional `labe
 |-----------|----------|-------------|
 | `id` | Yes | Unique technical identifier (slug format). Used for file paths, cross-references, and folder names. Not editable from the UI. |
 | `label` | No | Human-friendly display name. Shown as the primary cell name in the UI. Can contain spaces and mixed case. |
+| `agent` | No | Agent profile ID to use for this cell. Overrides the notebook's default agent profile. Must reference a profile defined in the `agents` frontmatter field. |
+| `skip` | No | Set to `"true"` to skip this break cell during execution. Only valid on `break` cells. |
 
 When a `label` is set, the UI shows it as the primary name with the `id` displayed as a subtle suffix. When no label is set, the `id` is shown as the cell name.
 
@@ -471,13 +523,25 @@ Description of what the user should review before continuing.
 <break id="unique-id" label="Display Name">
 Same content, but displayed with a readable label in the UI.
 </break>
+
+<break id="unique-id" skip="true">
+This break is skipped during execution (auto-continues).
+</break>
 ```
+
+The `skip` attribute allows individual break cells to be disabled without removing them. When `skip="true"`, the break auto-continues instead of pausing. This is useful when developing a workflow — add breaks during debugging and skip them once a section is stable, without deleting the break.
+
+A global "Skip Breakpoints" toggle in the execution options can also skip all break cells at once, regardless of individual `skip` attributes.
 
 **Example:**
 ```xml
 <break id="verify-setup" label="Verify Setup">
 Review the project structure and configuration files before
 proceeding to add the database layer.
+</break>
+
+<break id="check-output" label="Check Output" skip="true">
+This break was used during development and is now skipped.
 </break>
 ```
 
@@ -828,6 +892,8 @@ When generating a notebook, ensure:
 8. **No inline state**: Do NOT include `status`, `duration`, `error`, or `exitCode` attributes on cell tags
 9. **ID format**: Use slug-format IDs: lowercase, alphanumeric, hyphens (e.g., `setup-env`, `create-api`)
 10. **Heading**: Include `# {name}` after the frontmatter, matching the `name` field
-11. **Valid attributes**: Cell tags only accept `id` and `label` attributes. No other attributes are allowed.
+11. **Valid attributes**: Cell tags only accept `id`, `label`, `agent`, and `skip` attributes. No other attributes are allowed.
 12. **Label format**: Labels are free-form text. Use human-readable names (e.g., `"Setup Environment"`, `"Generate Report"`). Labels are optional — when omitted, the cell ID is displayed as the name.
+13. **Agent reference**: The `agent` attribute must reference a valid profile `id` from the `agents` frontmatter field. If omitted, the notebook's default agent profile is used.
+14. **Skip attribute**: The `skip` attribute is only valid on `break` cells. Its only valid value is `"true"`. When present on non-break cells, it is ignored.
 

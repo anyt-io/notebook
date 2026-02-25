@@ -5,6 +5,71 @@ All notable changes to AnyT Notebook will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.15.0] - 2026-02-24
+
+### Added
+
+- Claude session mode for context continuity across task cells
+- Resume in Terminal button for Claude session mode
+- Jupyter-style shell error display with line highlighting
+
+### Fixed
+
+- Running cell timer showing 0.0s due to race condition
+
+## [0.14.0] - 2026-02-23
+
+### Added
+
+- Files tab with file explorer and image preview in cell output
+
+## [0.13.0] - 2026-02-22
+
+### Fixed
+
+- Multi-notebook race condition via ready handshake
+- Break cell hanging in both pipeline and single-cell modes
+- Break node hanging and pipeline continuation bugs
+
+### Added
+
+- Comprehensive execution state and cell lifecycle test coverage
+
+## [0.12.0] - 2026-02-21
+
+### Added
+
+- Notebook-level worker connection with session management and cell execution
+- Cross-platform `@anyt/notebook-ui` shared package with bridge abstraction
+- Parser tests and Docker build support for `@anyt/*` packages
+
+### Changed
+
+- Extracted `@anyt/notebook-core` shared package from notebook extension
+- Unified notebook UI components with Tailwind v4 for cross-platform rendering
+- Replaced `--vscode-*` CSS vars with `--editor-*` abstraction
+
+### Fixed
+
+- Broken notebook UI after Tailwind v4 migration
+- VS Code InputCell form rendering via cell override adapter
+- CI race condition in notebook webview build
+
+## [0.10.0] - 2026-02-13
+
+### Added
+
+- Image processing skills (remove-background, upscale-image)
+- RedNote skill and page-to-rednote notebook
+- LinkedIn outreach notebook with agent-browser automation
+- Ebook skill and youtube-podcast-to-ebook notebook
+- Gemini image skill and playground notebook
+- PSPM CLI guide documentation
+
+### Changed
+
+- Enhanced podcast-to-ebook notebook with screenshots, sections, and length control
+
 ## [0.9.0] - 2026-02-11
 
 ### Added
