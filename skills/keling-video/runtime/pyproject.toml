@@ -1,6 +1,6 @@
 [project]
 name = "keling-video"
-version = "0.1.0"
+version = "0.2.0"
 description = "Generate videos using fal.ai Kling Video O3 API"
 requires-python = ">=3.10"
 dependencies = [

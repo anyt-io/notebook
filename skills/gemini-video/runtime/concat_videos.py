@@ -13,17 +13,18 @@ import sys
 import tempfile
 from pathlib import Path
 
-SKILL_DIR = Path(__file__).resolve().parent.parent
-DEFAULT_OUTPUT_DIR = SKILL_DIR / "output"
+from config import DEFAULT_OUTPUT_DIR, SUPPORTED_VIDEO_EXTENSIONS, ConfigError, GeminiVideoError, ValidationError
 
-SUPPORTED_EXTENSIONS = {".mp4", ".mov", ".avi", ".mkv", ".webm"}
+_ERROR_PREFIXES: dict[type[GeminiVideoError], str] = {
+    ConfigError: "Configuration error",
+    ValidationError: "Validation error",
+}
 
 
-def check_ffmpeg() -> str | None:
-    """Return an error message if ffmpeg is not available, else None."""
+def check_ffmpeg() -> None:
+    """Check if ffmpeg is available. Raises ConfigError if not."""
     if shutil.which("ffmpeg") is None:
-        return "ffmpeg is not installed or not on PATH. Install from https://ffmpeg.org/"
-    return None
+        raise ConfigError("ffmpeg is not installed or not on PATH. Install from https://ffmpeg.org/")
 
 
 def find_videos_in_directory(directory: Path, pattern: str = "*.mp4") -> list[Path]:
@@ -33,18 +34,20 @@ def find_videos_in_directory(directory: Path, pattern: str = "*.mp4") -> list[Pa
     return sorted(directory.glob(pattern))
 
 
-def validate_video_files(paths: list[Path]) -> str | None:
-    """Return an error message if any video file is invalid, else None."""
+def validate_video_files(paths: list[Path]) -> None:
+    """Validate video file list. Raises ValidationError if any file is invalid."""
     if not paths:
-        return "No video files provided."
+        raise ValidationError("No video files provided.")
     for path in paths:
         if not path.exists():
-            return f"File not found: {path}"
+            raise ValidationError(f"File not found: {path}")
         if not path.is_file():
-            return f"Not a file: {path}"
-        if path.suffix.lower() not in SUPPORTED_EXTENSIONS:
-            return f"Unsupported format '{path.suffix}': {path} (supported: {', '.join(sorted(SUPPORTED_EXTENSIONS))})"
-    return None
+            raise ValidationError(f"Not a file: {path}")
+        if path.suffix.lower() not in SUPPORTED_VIDEO_EXTENSIONS:
+            raise ValidationError(
+                f"Unsupported format '{path.suffix}': {path} "
+                f"(supported: {', '.join(sorted(SUPPORTED_VIDEO_EXTENSIONS))})"
+            )
 
 
 def build_concat_file(video_paths: list[Path], concat_file: Path) -> None:
@@ -123,52 +126,47 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    # --- Check ffmpeg ---
-    error = check_ffmpeg()
-    if error:
-        print(f"Error: {error}", file=sys.stderr)
+    try:
+        # Stage 1: Check ffmpeg
+        check_ffmpeg()
+
+        # Stage 2: Resolve input files
+        if args.dir and args.files:
+            raise ConfigError("Use either positional files or --dir, not both.")
+
+        if args.dir:
+            video_dir = Path(args.dir)
+            if not video_dir.is_dir():
+                raise ValidationError(f"Directory not found: {video_dir}")
+            video_paths = find_videos_in_directory(video_dir, args.pattern)
+            if not video_paths:
+                raise ValidationError(f"No files matching '{args.pattern}' in {video_dir}")
+        elif args.files:
+            video_paths = [Path(f) for f in args.files]
+        else:
+            raise ConfigError("Provide video files as arguments or use --dir.")
+
+        # Stage 3: Validate
+        validate_video_files(video_paths)
+
+        # Stage 4: Print summary and concat
+        output_path = Path(args.output)
+        print(f"Concatenating {len(video_paths)} video(s):")
+        for p in video_paths:
+            print(f"  {p}")
+        print(f"Output: {output_path}\n")
+
+        exit_code = concat_videos(video_paths, output_path)
+        if exit_code == 0:
+            print(f"\nDone! Video saved to {output_path}")
+        else:
+            print("\nError: ffmpeg failed.", file=sys.stderr)
+        return exit_code
+
+    except GeminiVideoError as e:
+        prefix = _ERROR_PREFIXES.get(type(e), "Error")
+        print(f"\n{prefix}: {e}", file=sys.stderr)
         return 1
-
-    # --- Resolve input files ---
-    if args.dir and args.files:
-        print("Error: Use either positional files or --dir, not both.", file=sys.stderr)
-        return 1
-
-    if args.dir:
-        video_dir = Path(args.dir)
-        if not video_dir.is_dir():
-            print(f"Error: Directory not found: {video_dir}", file=sys.stderr)
-            return 1
-        video_paths = find_videos_in_directory(video_dir, args.pattern)
-        if not video_paths:
-            print(f"Error: No files matching '{args.pattern}' in {video_dir}", file=sys.stderr)
-            return 1
-    elif args.files:
-        video_paths = [Path(f) for f in args.files]
-    else:
-        print("Error: Provide video files as arguments or use --dir.", file=sys.stderr)
-        return 1
-
-    # --- Validate ---
-    error = validate_video_files(video_paths)
-    if error:
-        print(f"Error: {error}", file=sys.stderr)
-        return 1
-
-    # --- Print summary ---
-    output_path = Path(args.output)
-    print(f"Concatenating {len(video_paths)} video(s):")
-    for p in video_paths:
-        print(f"  {p}")
-    print(f"Output: {output_path}\n")
-
-    # --- Concat ---
-    exit_code = concat_videos(video_paths, output_path)
-    if exit_code == 0:
-        print(f"\nDone! Video saved to {output_path}")
-    else:
-        print("\nError: ffmpeg failed.", file=sys.stderr)
-    return exit_code
 
 
 if __name__ == "__main__":

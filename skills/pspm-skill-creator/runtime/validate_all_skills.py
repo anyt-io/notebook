@@ -8,6 +8,7 @@ Run with: uv run --project runtime runtime/validate_all_skills.py <skills-dir>
 import sys
 from pathlib import Path
 
+from config import ValidationError
 from validate_skill import validate_skill
 
 
@@ -15,11 +16,7 @@ def validate_all_skills(skills_dir: Path) -> bool:
     """
     Validate all skill directories under the given path.
 
-    Args:
-        skills_dir: Parent directory containing skill folders
-
-    Returns:
-        True if all skills are valid, False otherwise
+    Returns True if all skills are valid, False otherwise.
     """
     skills_dir = Path(skills_dir).resolve()
 
@@ -39,9 +36,11 @@ def validate_all_skills(skills_dir: Path) -> bool:
     results: list[tuple[str, bool, str]] = []
 
     for skill_path in skill_dirs:
-        valid, message = validate_skill(skill_path)
-        results.append((skill_path.name, valid, message))
-        if not valid:
+        try:
+            name = validate_skill(skill_path)
+            results.append((skill_path.name, True, f"Skill '{name}' is valid"))
+        except ValidationError as e:
+            results.append((skill_path.name, False, str(e)))
             all_valid = False
 
     # Print results
@@ -59,15 +58,15 @@ def validate_all_skills(skills_dir: Path) -> bool:
     return all_valid
 
 
-def main() -> None:
+def main() -> int:
     if len(sys.argv) < 2:
         print("Usage: uv run --project runtime runtime/validate_all_skills.py <skills-directory>")
-        sys.exit(1)
+        return 1
 
     skills_dir = Path(sys.argv[1])
     success = validate_all_skills(skills_dir)
-    sys.exit(0 if success else 1)
+    return 0 if success else 1
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

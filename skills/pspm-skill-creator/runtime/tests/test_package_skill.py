@@ -1,6 +1,11 @@
+"""Tests for package_skill.py."""
+
 import zipfile
 from pathlib import Path
 
+import pytest
+
+from config import PackagingError, ValidationError
 from package_skill import package_skill, should_exclude
 
 
@@ -42,7 +47,6 @@ class TestPackageSkill:
         skill_path = self._create_valid_skill(tmp_path)
         output_dir = tmp_path / "dist"
         result = package_skill(skill_path, output_dir)
-        assert result is not None
         assert result.exists()
         assert result.suffix == ".skill"
 
@@ -50,14 +54,12 @@ class TestPackageSkill:
         skill_path = self._create_valid_skill(tmp_path)
         output_dir = tmp_path / "dist"
         result = package_skill(skill_path, output_dir)
-        assert result is not None
         assert zipfile.is_zipfile(result)
 
     def test_skill_file_contains_expected_files(self, tmp_path: Path):
         skill_path = self._create_valid_skill(tmp_path)
         output_dir = tmp_path / "dist"
         result = package_skill(skill_path, output_dir)
-        assert result is not None
         with zipfile.ZipFile(result) as zf:
             names = zf.namelist()
             assert any("SKILL.md" in n for n in names)
@@ -74,26 +76,25 @@ class TestPackageSkill:
 
         output_dir = tmp_path / "dist"
         result = package_skill(skill_path, output_dir)
-        assert result is not None
         with zipfile.ZipFile(result) as zf:
             names = zf.namelist()
             assert not any("__pycache__" in n for n in names)
             assert not any("uv.lock" in n for n in names)
 
-    def test_fails_for_missing_directory(self, tmp_path: Path):
-        result = package_skill(tmp_path / "nonexistent")
-        assert result is None
+    def test_raises_for_missing_directory(self, tmp_path: Path):
+        with pytest.raises(PackagingError, match="not found"):
+            package_skill(tmp_path / "nonexistent")
 
-    def test_fails_for_missing_skill_md(self, tmp_path: Path):
+    def test_raises_for_missing_skill_md(self, tmp_path: Path):
         skill_path = tmp_path / "bad-skill"
         skill_path.mkdir()
-        result = package_skill(skill_path)
-        assert result is None
+        with pytest.raises(PackagingError, match=r"SKILL\.md"):
+            package_skill(skill_path)
 
-    def test_fails_for_invalid_skill(self, tmp_path: Path):
+    def test_raises_for_invalid_skill(self, tmp_path: Path):
         skill_path = tmp_path / "bad-skill"
         skill_path.mkdir()
         # Missing required description
         (skill_path / "SKILL.md").write_text("---\nname: bad-skill\n---\n\n# Bad\n")
-        result = package_skill(skill_path)
-        assert result is None
+        with pytest.raises(ValidationError, match="description"):
+            package_skill(skill_path)

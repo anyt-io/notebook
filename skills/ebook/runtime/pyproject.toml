@@ -1,6 +1,6 @@
 [project]
 name = "ebook"
-version = "0.1.0"
+version = "0.2.0"
 description = "Convert markdown files to EPUB and PDF ebooks"
 requires-python = ">=3.11"
 dependencies = [
