@@ -9,7 +9,10 @@ This guide covers everything you need to know to create and run AI-powered workf
 - [Working with Cells](#working-with-cells)
 - [Cell Labels](#cell-labels)
 - [Agent Profiles](#agent-profiles)
+- [Session Mode](#session-mode)
 - [Execution Modes](#execution-modes)
+- [Shell Error Display](#shell-error-display)
+- [Files Tab](#files-tab)
 - [Form-Based Inputs](#form-based-inputs)
 - [Workflow Development Lifecycle](#workflow-development-lifecycle)
 - [Best Practices](#best-practices)
@@ -105,7 +108,7 @@ Task cells are executed by your AI agent (Claude Code or Codex). Write clear, sp
 
 ### Shell Cells
 
-Shell cells run scripts directly -- no AI involved. They're fast, deterministic, and ideal for commands you already know.
+Shell cells run scripts directly -- no AI involved. They're fast, deterministic, and ideal for commands you already know. When a script fails, a Jupyter-style error display highlights the exact failing line with surrounding context. See [Shell Error Display](#shell-error-display) for details.
 
 **Use cases:**
 
@@ -171,6 +174,41 @@ Override the notebook default on individual task cells. This is useful when diff
 
 The toolbar shows the health status of your configured runtimes. If a runtime is not installed, you'll see setup links to get started quickly.
 
+## Session Mode
+
+Session mode maintains Claude's context across multiple task cells in a notebook, so each task cell can build on the conversation from previous cells without re-explaining context.
+
+### Enabling Session Mode
+
+Set `anyt.claude.sessionMode` to `true` in VS Code settings, or add it to your notebook's frontmatter:
+
+```yaml
+---
+schema: "2.0"
+workdir: output
+---
+```
+
+Then enable it from the execution options in the toolbar.
+
+### How It Works
+
+- When session mode is enabled, the first task cell starts a new Claude session
+- Subsequent task cells continue in the same session, maintaining full conversation history
+- The session ID is displayed in the toolbar
+- If you need to debug in the terminal, click **Resume in Terminal** to open the session in an interactive Claude terminal
+
+### When to Use Session Mode
+
+- **Multi-step refactoring**: Each cell can reference changes made in previous cells
+- **Iterative development**: Build on context without repeating instructions
+- **Complex projects**: Maintain a shared understanding across many task cells
+
+### When NOT to Use Session Mode
+
+- **Independent tasks**: When cells don't need shared context
+- **Parallel experimentation**: When you want each cell to start fresh
+
 ## Execution Modes
 
 ### Run All
@@ -188,6 +226,30 @@ Executes only the selected cell, useful for:
 ### Continue from Cell
 
 When a notebook pauses (at input or break cells), click "Continue" to proceed.
+
+## Shell Error Display
+
+When a shell cell fails, AnyT Notebook shows a Jupyter-style error display with:
+
+- **Error type and message**: The specific error (e.g., command not found, exit code)
+- **Line highlighting**: The exact line that caused the failure is highlighted in red
+- **Surrounding context**: Lines before and after the error are shown for context
+- **Line numbers**: Each line of the script is numbered for easy reference
+
+This makes debugging shell scripts much faster -- you can immediately see which line failed and why, without scrolling through raw output.
+
+## Files Tab
+
+Each cell's output panel includes a **Files** tab that shows all files created or modified during execution:
+
+- **File tree**: Files are organized in a tree structure matching the directory layout
+- **Image preview**: Image files (PNG, JPG, SVG, etc.) are shown with inline previews
+- **Quick navigation**: Click any file to open it in VS Code
+
+The Files tab is especially useful for:
+- Reviewing AI-generated code files after a task cell runs
+- Previewing generated images or assets
+- Verifying that the correct files were created in the right locations
 
 ## Form-Based Inputs
 
