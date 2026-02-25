@@ -57,7 +57,7 @@ AI agent workflows need the same thing. Not a chatbot. A **workflow tool**.
 
 ### The Notebook
 
-An AnyT notebook is a visual interface in VS Code. You create a notebook, add cells by clicking buttons in the toolbar, and edit each cell with a rich text editor featuring code blocks with syntax highlighting, formatting toolbar, and a markdown toggle. Behind the scenes, the notebook is stored as a `.anyt.md` file -- a plain-text, version-controllable document -- but you interact with it entirely through the visual editor.
+An AnyT notebook is a visual interface in VS Code. You create a notebook, add cells by clicking buttons in the toolbar, and edit each cell with a rich text editor featuring code blocks with syntax highlighting, formatting toolbar, and a markdown toggle. Behind the scenes, the notebook is stored as a `.anyt` file -- a plain-text, version-controllable document -- but you interact with it entirely through the visual editor.
 
 The notebook shows you every step, in order, before anything runs. You can see the full plan, rearrange steps, add checkpoints, and then execute with confidence.
 
@@ -136,7 +136,7 @@ The workflow is working. Now remove the unnecessary breakpoints. Keep only the o
 
 ### Phase 5: Share
 
-The `.anyt.md` file is a portable, versionable artifact. Check it into git. Share it with teammates. Someone else can take your debugged workflow, understand what it does by reading it, and run it in their environment.
+The `.anyt` file is a portable, versionable artifact. Check it into git. Share it with teammates. Someone else can take your debugged workflow, understand what it does by reading it, and run it in their environment.
 
 This lifecycle doesn't exist with chatbot-style AI agents. Every conversation is ephemeral. Every complex task starts from scratch. AnyT Notebook makes AI workflows **durable, improvable, and shareable**.
 
@@ -170,14 +170,14 @@ Rapidly prototype features. Each cell is one experiment. Run them independently.
 | **AI + deterministic mix** | Everything is AI | Everything is scripted | Code cells only | Task + shell cells |
 | **Modify plan mid-run** | New conversation | Edit YAML, re-run | Add/edit cells | Add/edit cells |
 | **State persistence** | Conversation history | Pipeline artifacts | Notebook file | Folder-based (.anyt/cells/) |
-| **Shareable workflow** | Copy-paste prompts | YAML config file | .ipynb file | .anyt.md file |
+| **Shareable workflow** | Copy-paste prompts | YAML config file | .ipynb file | .anyt file |
 | **Primary domain** | Ad-hoc coding tasks | Deployment & CI | Data science | AI agent workflows |
 
 ## Technical Design
 
 ### Separation of Structure and State
 
-The notebook file (`.anyt.md`) stores only the **structure**: cell IDs, types, and content. All execution state -- outputs, status, duration, errors -- is stored in the filesystem under `.anyt/cells/{cell-id}/`. This separation means:
+The notebook file (`.anyt`) stores only the **structure**: cell IDs, types, and content. All execution state -- outputs, status, duration, errors -- is stored in the filesystem under `.anyt/cells/{cell-id}/`. This separation means:
 
 - Notebook files are clean and diffable
 - Multiple people can share the same notebook without state conflicts
@@ -194,7 +194,7 @@ AnyT Notebook doesn't implement its own AI. It orchestrates existing AI agents (
 
 ### Plain-Text, Version-Controlled Format
 
-`.anyt.md` files are plain text with YAML frontmatter and XML-like cell syntax. They work with git, code review tools, and any text editor. No binary format, no proprietary database.
+`.anyt` files are plain text with YAML frontmatter and XML-like cell syntax. They work with git, code review tools, and any text editor. No binary format, no proprietary database.
 
 ## Getting Started
 
@@ -206,6 +206,6 @@ AnyT Notebook doesn't implement its own AI. It orchestrates existing AI agents (
 6. Insert break cells between steps to inspect outputs
 7. Iterate until the workflow works
 8. Remove unnecessary breakpoints
-9. Share the `.anyt.md` file with your team
+9. Share the `.anyt` file with your team
 
 For the file format reference, see [anyt-notebook-spec.md](anyt-notebook-spec.md).

@@ -50,7 +50,7 @@ This guide covers everything you need to know to create and run AI-powered workf
 
 The `workdir` setting in the notebook frontmatter specifies where AI-generated files will be created. This keeps your project organized:
 
-- **Relative path**: `workdir: output` creates `./output/` relative to your `.anyt.md` file
+- **Relative path**: `workdir: output` creates `./output/` relative to your `.anyt` file
 - **Absolute path**: `workdir: /tmp/my-project` uses an absolute location
 
 All cell state (execution logs, progress) is stored in `{workdir}/.anyt/cells/`.
@@ -426,7 +426,7 @@ The workflow works. Remove unnecessary breakpoints. Keep only the ones at critic
 
 ### Phase 5: Share
 
-Check the `.anyt.md` file into git. Share it with teammates. They get a debugged, proven workflow they can understand and run.
+Check the `.anyt` file into git. Share it with teammates. They get a debugged, proven workflow they can understand and run.
 
 ## Best Practices
 
