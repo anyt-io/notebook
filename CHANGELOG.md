@@ -5,70 +5,116 @@ All notable changes to AnyT Notebook will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.15.0] - 2026-02-24
+## [0.17.0] - 2026-02-25
+
+### Added
+
+- Docs button in toolbar for quick access to documentation
+- CSS-based tooltips for toolbar buttons
+- New sample notebooks: stock analysis, story-to-video, YouTube summarizer, LinkedIn outreach, image background remover, Gemini image playground, page-to-RedNote, podcast-to-ebook
+- Default `.anyt` file extension for new notebooks
+
+## [0.16.0] - 2026-02-25
 
 ### Added
 
 - Claude session mode for context continuity across task cells
 - Resume in Terminal button for Claude session mode
-- Jupyter-style shell error display with line highlighting
+- Mintlify documentation site with synced package docs
 
 ### Fixed
 
 - Running cell timer showing 0.0s due to race condition
 
+## [0.15.0] - 2026-02-24
+
+### Added
+
+- Jupyter-style shell error display with line highlighting for improved debugging
+
 ## [0.14.0] - 2026-02-23
 
 ### Added
 
-- Files tab with file explorer and image preview in cell output
+- Files tab in cell output with file explorer tree and image preview support
+
+## [0.13.3] - 2026-02-23
+
+### Added
+
+- Comprehensive test coverage for execution state machine (3 → 96 tests): data-driven valid/invalid transition validation, force flag, runMode auto-clearing, helper methods, persistence
+- Regression tests for interactionStateManager ensuring clearInputWaiting/clearBreakWaiting properly sync state to notebookService
+- Cell lifecycle tests for break, input, and note cells in single-cell mode (fires executionStopped, returns to idle)
+- Tests for notebook run finally-block force-reset, stuck-stopped state recovery, and concurrent execution blocking
+
+## [0.13.2] - 2026-02-23
+
+### Fixed
+
+- Fix shell cells hanging indefinitely after script completion by using `exec` to replace the login shell with the script process
+- Kill entire process group on stop so child processes (e.g. npx subprocesses) are also terminated
+- Use `stdin: "ignore"` instead of pipe for shell cells to prevent interactive prompts from hanging
+
+### Changed
+
+- Increase shell cell editor minimum height for better visibility of multi-line scripts
+
+## [0.13.1] - 2026-02-23
+
+### Fixed
+
+- Resolve break node hanging caused by orphaned promises when cancelAll/resetBreakWaiting set breakResolve to null without resolving
+- Fix pipeline continuation bug where loadNotebook dropped isWaiting state for break cells on file change events
+- Fix premature waitingBreakId clearing in webview caused by _onExecutionStopped firing on every cell completion
 
 ## [0.13.0] - 2026-02-22
 
 ### Fixed
 
-- Multi-notebook race condition via ready handshake
-- Break cell hanging in both pipeline and single-cell modes
-- Break node hanging and pipeline continuation bugs
-
-### Added
-
-- Comprehensive execution state and cell lifecycle test coverage
+- Resolve multi-notebook race condition via ready handshake between webview and extension
 
 ## [0.12.0] - 2026-02-21
 
 ### Added
 
-- Notebook-level worker connection with session management and cell execution
-- Cross-platform `@anyt/notebook-ui` shared package with bridge abstraction
-- Parser tests and Docker build support for `@anyt/*` packages
+- Shared `@anyt/notebook-core` package extracted from notebook extension
+- Parser tests for `.anyt.md` format
 
 ### Changed
 
-- Extracted `@anyt/notebook-core` shared package from notebook extension
+- Extracted `@anyt/editor` CSS vars from `--vscode-*` to `--editor-*` abstraction for cross-platform use
 - Unified notebook UI components with Tailwind v4 for cross-platform rendering
-- Replaced `--vscode-*` CSS vars with `--editor-*` abstraction
+- Migrated editor components to Tailwind CSS
 
 ### Fixed
 
+- Write `.done` markers for all cell types and save input `response.json`
+- Include note cells in `.anyt` folder creation and marker writing
+- Restored VS Code InputCell with form rendering via cell override adapter
 - Broken notebook UI after Tailwind v4 migration
-- VS Code InputCell form rendering via cell override adapter
-- CI race condition in notebook webview build
+
+## [0.11.0] - 2026-02-19
+
+### Added
+
+- Skip breakpoints feature with global toggle and per-cell control
+- "Try Sample" button to notebook title bar for quick onboarding
+- Replaced built-in sample notebooks with real-world workflows
+
+### Changed
+
+- Updated outdated dependencies across all workspace packages
 
 ## [0.10.0] - 2026-02-13
 
 ### Added
 
-- Image processing skills (remove-background, upscale-image)
-- RedNote skill and page-to-rednote notebook
-- LinkedIn outreach notebook with agent-browser automation
-- Ebook skill and youtube-podcast-to-ebook notebook
-- Gemini image skill and playground notebook
-- PSPM CLI guide documentation
+- Support for multiple open notebooks with per-document sessions
 
-### Changed
+### Fixed
 
-- Enhanced podcast-to-ebook notebook with screenshots, sections, and length control
+- Derive isRunning from granular signals to fix break cell state sync
+- Stop pipeline when shell cell exits with non-zero code
 
 ## [0.9.0] - 2026-02-11
 

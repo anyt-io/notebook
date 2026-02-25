@@ -110,10 +110,14 @@ This is the same cycle as software development: write code, add breakpoints, ste
 
 | Sample | What it does |
 |--------|--------------|
-| **Hello World** | Simplest notebook -- one task, instant result |
-| **Web Scraper** | Scrape, review, parse, validate -- with human checkpoints |
-| **Form Demo** | All form field types for user input |
-| **Product Video** | Full video pipeline with Remotion, voiceover, and subtitles |
+| **Stock Analysis** | Analyze stock data with AI-powered insights |
+| **YouTube Video Summarizer** | Summarize YouTube videos from transcripts |
+| **Story to Video** | Generate videos from story prompts |
+| **LinkedIn Outreach** | AI-powered LinkedIn outreach with agent-browser automation |
+| **Image Background Remover** | Remove image backgrounds using AI |
+| **Gemini Image Playground** | Generate and edit images with Google Gemini |
+| **Page to RedNote** | Convert web pages to RedNote-style carousel posts |
+| **Podcast to Ebook** | Convert YouTube podcasts into formatted ebooks |
 
 Open Command Palette -> **"AnyT: Open Sample Notebook"** -> pick one -> click Run.
 
