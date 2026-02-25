@@ -1,11 +1,11 @@
 ---
 name: create-anyt-notebook
-description: Create AnyT Notebook (.anyt.md) files for AI agent workflows. Use when the user wants to create, scaffold, or generate an AnyT notebook, design an AI workflow with cells, or build a step-by-step notebook for tasks like project setup, data pipelines, or content generation.
+description: Create AnyT Notebook (.anyt) files for AI agent workflows. Use when the user wants to create, scaffold, or generate an AnyT notebook, design an AI workflow with cells, or build a step-by-step notebook for tasks like project setup, data pipelines, or content generation.
 ---
 
 # Create AnyT Notebook
 
-Create `.anyt.md` notebook files — workflow documents for AI agents that combine task cells (AI execution), shell cells (scripts), input cells (user forms), note cells (documentation), and break cells (review gates).
+Create `.anyt` notebook files — workflow documents for AI agents that combine task cells (AI execution), shell cells (scripts), input cells (user forms), note cells (documentation), and break cells (review gates).
 
 For the complete specification, see [references/anyt-notebook-spec.md](references/anyt-notebook-spec.md).
 For product context, see [references/product.md](references/product.md).
@@ -13,7 +13,7 @@ For real-world examples, see files in [references/examples/](references/examples
 
 ## File Format
 
-An `.anyt.md` file has two sections: YAML frontmatter and a body with cell tags.
+An `.anyt` file has two sections: YAML frontmatter and a body with cell tags.
 
 ```
 ---

@@ -100,7 +100,7 @@ AnyT Notebook treats AI workflows like code -- build, test, and refine them iter
 2. **Debug** -- Insert break cells as checkpoints and run step by step to inspect each output
 3. **Iterate** -- Review results, fix failing steps, reorder or add cells as needed
 4. **Harden** -- Remove breakpoints once confident and run the full workflow end-to-end
-5. **Share** -- Version the `.anyt.md` file and share with your team
+5. **Share** -- Version the `.anyt` file and share with your team
 
 This is the same cycle as software development: write code, add breakpoints, step through, fix bugs, remove breakpoints, deploy. **AnyT Notebook brings this discipline to AI agent workflows.**
 
@@ -139,7 +139,7 @@ Open Command Palette -> **"AnyT: Open Sample Notebook"** -> pick one -> click Ru
 
 | Command | What it does |
 |---------|--------------|
-| `AnyT: New Notebook` | Create a fresh `.anyt.md` file |
+| `AnyT: New Notebook` | Create a fresh `.anyt` file |
 | `AnyT: Open Sample Notebook` | Browse and open built-in sample notebooks |
 
 All other actions (run, stop, reset, add cells) are available directly from the notebook toolbar.
@@ -184,7 +184,8 @@ See [docs/skill-development-guide.md](docs/skill-development-guide.md) for full 
 
 - [Product Overview](docs/PRODUCT.md) -- Detailed introduction to AnyT Notebook
 - [User Guide](docs/USER_GUIDE.md) -- Complete guide to using AnyT Notebook
-- [File Format Specification](docs/anyt-notebook-spec.md) -- Complete `.anyt.md` format reference
+- [Full Documentation](https://docs.anyt.io) -- Comprehensive documentation site
+- [File Format Specification](docs/anyt-notebook-spec.md) -- Complete `.anyt` format reference
 - [Changelog](CHANGELOG.md) -- Release history and changes
 - [Examples](examples/) -- Sample notebooks to get you started
 
