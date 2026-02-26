@@ -5,6 +5,26 @@ All notable changes to AnyT Notebook will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.17.2] - 2026-02-25
+
+### Changed
+
+- Moved session continue button from toolbar to task cell for better contextual access
+
+## [0.17.1] - 2026-02-25
+
+### Added
+
+- Always-visible Session button in toolbar that creates or resumes Claude sessions
+- Resume fail recovery: automatically retries without session args when resume fails (configurable via `anyt.claude.resumeFailRecovery` setting)
+- "AnyT: Settings" command for toggling all extension settings via QuickPick
+- "AnyT: Toggle Session Mode" shortcut command
+
+### Changed
+
+- Notebook run reuses existing Claude session instead of always generating new
+- Relaxed notebook name validation to allow spaces, hyphens, and more characters
+
 ## [0.17.0] - 2026-02-25
 
 ### Added
