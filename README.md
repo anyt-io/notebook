@@ -132,6 +132,7 @@ Open Command Palette -> **"AnyT: Open Sample Notebook"** -> pick one -> click Ru
 | `anyt.shell.path` | `""` | Custom shell path for shell cells |
 | `anyt.shell.loginShell` | `true` | Use login shell to source profile files |
 | `anyt.claude.sessionMode` | `false` | Maintain Claude context across task cells |
+| `anyt.claude.resumeFailRecovery` | `true` | Auto-retry without session args when resume fails |
 
 ---
 
@@ -141,6 +142,8 @@ Open Command Palette -> **"AnyT: Open Sample Notebook"** -> pick one -> click Ru
 |---------|--------------|
 | `AnyT: New Notebook` | Create a fresh `.anyt` file |
 | `AnyT: Open Sample Notebook` | Browse and open built-in sample notebooks |
+| `AnyT: Settings` | Toggle extension settings via QuickPick |
+| `AnyT: Toggle Session Mode` | Toggle Claude session mode on/off |
 
 All other actions (run, stop, reset, add cells) are available directly from the notebook toolbar.
 
