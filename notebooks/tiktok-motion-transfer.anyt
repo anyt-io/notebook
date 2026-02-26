@@ -1,0 +1,252 @@
+---
+schema: "2.0"
+name: tiktok-motion-transfer
+description: Download a TikTok video and use Kling Motion Control to transfer
+  its motion onto a reference image character
+version: 1.0.0
+workdir: anyt_workspace_tiktok_motion
+agents:
+  - id: claude-default
+    name: Claude Code
+    type: claude
+    default: true
+    permissionMode: bypassPermissions
+  - id: codex-default
+    name: Codex
+    type: codex
+    permissionMode: dangerously-bypass
+---
+
+# tiktok-motion-transfer
+
+<note id="overview" label="Overview">
+## TikTok Motion Transfer Pipeline
+
+This notebook downloads a TikTok video and uses **Kling Motion Control** (fal.ai) to transfer the motion onto a character from a reference image.
+
+### Flow
+1. **Check Environment** — Verify `FAL_KEY`, `uv`, and `ffmpeg` are available
+2. **Install Skills** — Add tiktok-downloader and keling-motion skills
+3. **Video Input** — Enter the TikTok video URL to download
+4. **Download Video** — Download the TikTok video as the motion reference
+5. **Reference Image** — Provide a reference image of the character to animate
+6. **Review Inputs** — Verify the downloaded video and reference image before generation
+7. **Configure & Generate** — Set motion control options and generate the video
+8. **Done** — Final output summary
+</note>
+
+<shell id="check-env" label="Check Environment">
+#!/bin/bash
+echo "=== Checking Environment ==="
+
+if [ -z "$FAL_KEY" ]; then
+  echo "ERROR: FAL_KEY is not set."
+  echo ""
+  echo "Get an API key at: https://fal.ai/dashboard/keys"
+  echo "Then set it:"
+  echo '  export FAL_KEY="your-key-here"'
+  echo "Or add it to your .env file."
+  exit 1
+fi
+
+echo "FAL_KEY is set."
+echo ""
+echo "=== Checking uv ==="
+if command -v uv &> /dev/null; then
+  echo "uv $(uv --version) found"
+else
+  echo "ERROR: uv is not installed. Install from https://docs.astral.sh/uv/"
+  exit 1
+fi
+
+echo ""
+echo "=== Checking ffmpeg ==="
+if command -v ffmpeg &> /dev/null; then
+  echo "ffmpeg found: $(ffmpeg -version 2>&1 | head -1)"
+else
+  echo "WARNING: ffmpeg is not installed. Some features may not work."
+  echo "Install with: brew install ffmpeg"
+fi
+
+echo ""
+echo "=== Environment OK ==="
+</shell>
+
+<shell id="install-skills" label="Install Skills">
+#!/bin/bash
+echo "=== Installing TikTok Downloader Skill ==="
+npx @anytio/pspm@latest add @user/anyt/tiktok-downloader -y
+
+echo ""
+echo "=== Installing Keling Motion Skill ==="
+npx @anytio/pspm@latest add @user/anyt/keling-motion -y
+
+echo ""
+echo "=== Verify Installed Skills ==="
+ls -la .pspm/skills/ 2>/dev/null || echo "Skills directory not found"
+
+echo ""
+echo "=== Setup Output Directories ==="
+mkdir -p video reference output
+echo "Created: video/ reference/ output/"
+</shell>
+
+<input id="video-input" label="TikTok Video URL">
+## Which TikTok video do you want to use?
+
+Enter the TikTok video URL that contains the motion/dance/action you want to transfer onto your character.
+
+<form type="json">
+{
+  "fields": [
+    {
+      "name": "videoUrl",
+      "type": "text",
+      "label": "TikTok Video URL",
+      "required": true,
+      "default": "https://www.tiktok.com/@bismarckclass_/video/7606927884959206669?is_from_webapp=1",
+      "placeholder": "https://www.tiktok.com/@user/video/..."
+    }
+  ]
+}
+</form>
+</input>
+
+<task id="download-video" label="Download TikTok Video">
+Using the **tiktok-downloader** skill, download the TikTok video from the URL provided in `video-input`.
+
+- Download the video in MP4 format
+- Save to the `video/` directory
+- After downloading, list the files in `video/` so we know the exact filename
+
+**Output:** video/*.mp4
+</task>
+
+<input id="reference-image" label="Reference Image">
+## Provide a Reference Image
+
+The reference image defines the character's appearance. The motion from the TikTok video will be transferred onto this character.
+
+Provide a path to a local image file or a URL. Supported formats: PNG, JPEG, WebP, GIF (max 10MB).
+
+<form type="json">
+{
+  "fields": [
+    {
+      "name": "imagePath",
+      "type": "text",
+      "label": "Reference Image (path or URL)",
+      "required": true,
+      "default": "bear.jpg",
+      "placeholder": "/path/to/character.png or https://example.com/character.png"
+    },
+    {
+      "name": "imageDescription",
+      "type": "textarea",
+      "label": "Character Description (optional)",
+      "required": false,
+      "default": "A cute brown teddy bear with heart patches, presenting a golden trophy",
+      "rows": 2,
+      "placeholder": "Describe the character or scene, e.g., 'A cartoon robot dancing in a city'"
+    }
+  ]
+}
+</form>
+</input>
+
+<task id="prepare-image" label="Prepare Reference Image">
+Copy the reference image from `reference-image` into the `reference/` directory.
+
+- If a local file path was provided, copy it to `reference/character.png` (or keep original extension)
+- If a URL was provided, download it to `reference/character.png`
+- Verify the image exists and show its file size
+
+**Output:** reference/character.png (or matching extension)
+</task>
+
+<break id="review-inputs" label="Review Inputs">
+Review the downloaded TikTok video and reference image before generating the motion-controlled video.
+
+Files to check:
+- `video/` — The downloaded TikTok video (motion reference)
+- `reference/` — The character reference image
+
+Continue when you're satisfied with both inputs.
+</break>
+
+<input id="motion-config" label="Motion Control Settings">
+## Configure Motion Control
+
+Choose how the motion transfer should work.
+
+<form type="json">
+{
+  "fields": [
+    {
+      "name": "orientation",
+      "type": "select",
+      "label": "Character Orientation",
+      "required": true,
+      "default": "video",
+      "options": [
+        { "value": "image", "label": "Match reference image (max 10s output)" },
+        { "value": "video", "label": "Match reference video (max 30s output)" }
+      ],
+      "description": "Controls whether the generated character's orientation matches the image or video"
+    },
+    {
+      "name": "keepSound",
+      "type": "checkbox",
+      "label": "Keep Original Sound",
+      "default": true,
+      "description": "Keep the audio from the reference TikTok video"
+    },
+    {
+      "name": "prompt",
+      "type": "textarea",
+      "label": "Descriptive Prompt (optional)",
+      "required": false,
+      "default": "A cute teddy bear presenting a golden trophy, standing outdoors",
+      "rows": 2,
+      "placeholder": "Optional: describe the scene, e.g., 'A character dancing energetically in a ballroom'"
+    }
+  ]
+}
+</form>
+</input>
+
+<task id="generate-motion-video" label="Generate Motion-Controlled Video">
+Using the **keling-motion** skill, generate a motion-controlled video combining the reference image and TikTok video.
+
+- Use the reference image from `reference/` (the file prepared in the `prepare-image` step)
+- Use the downloaded TikTok video from `video/` as the motion reference
+- Apply the settings from `motion-config`:
+  - Character orientation setting
+  - Keep sound setting
+  - Descriptive prompt (if provided)
+- Save the output to `output/` with filename `motion_result.mp4`
+
+**Output:** output/motion_result.mp4
+</task>
+
+<note id="complete" label="Pipeline Complete">
+## Motion Transfer Complete
+
+### Generated Files
+```
+video/                    # Downloaded TikTok video (motion reference)
+reference/                # Character reference image
+output/motion_result.mp4  # Final motion-controlled video
+```
+
+### What Was Used
+- **TikTok Downloader** — Downloaded the reference motion video
+- **Kling Motion Control** (fal.ai) — Transferred motion onto the character image
+
+### Next Steps
+- Try different reference images with the same motion video
+- Try different TikTok videos with the same character image
+- Adjust character orientation (`image` vs `video`) for different effects
+- Add or remove the descriptive prompt for different results
+</note>
+
