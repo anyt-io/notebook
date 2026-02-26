@@ -1,0 +1,22 @@
+# Output
+output/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+
+# Dev
+.ruff_cache/
+.pytest_cache/
+.mypy_cache/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Lock file (regenerated on install)
+uv.lock

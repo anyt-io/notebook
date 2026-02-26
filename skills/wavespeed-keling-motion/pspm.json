@@ -1,0 +1,25 @@
+{
+  "$schema": "https://pspm.dev/schema/v1/pspm.json",
+  "name": "wavespeed-keling-motion",
+  "version": "0.1.0",
+  "description": "Transfer motion from reference videos to animate still images using WaveSpeed AI Kling v2.6 Motion Control API",
+  "author": "Bin Sheng <supercarl87@gmail.com>",
+  "license": "Apache-2.0",
+  "type": "skill",
+  "capabilities": [
+    "motion-control",
+    "image-animation",
+    "video-motion-transfer",
+    "ai-video-generation"
+  ],
+  "main": "SKILL.md",
+  "requirements": {
+    "pspm": ">=0.1.0"
+  },
+  "files": [
+    "SKILL.md",
+    "runtime"
+  ],
+  "dependencies": {},
+  "private": false
+}
