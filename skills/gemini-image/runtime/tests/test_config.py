@@ -23,6 +23,7 @@ class TestConstants:
 
     def test_available_models_are_current(self):
         assert "gemini-2.5-flash-image" in AVAILABLE_MODELS
+        assert "gemini-3.1-flash-image-preview" in AVAILABLE_MODELS
         assert "gemini-3-pro-image-preview" in AVAILABLE_MODELS
         for model in AVAILABLE_MODELS:
             assert not model.startswith("gemini-2.0-")
@@ -36,7 +37,7 @@ class TestConstants:
             assert int(parts[1]) > 0
 
     def test_image_sizes(self):
-        assert SUPPORTED_IMAGE_SIZES == ["1K", "2K", "4K"]
+        assert SUPPORTED_IMAGE_SIZES == ["0.5K", "1K", "2K", "4K"]
 
     def test_person_generation_options(self):
         assert "DONT_ALLOW" in PERSON_GENERATION_OPTIONS

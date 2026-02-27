@@ -23,6 +23,7 @@ Generate and edit images using the Google Gemini API's native image generation c
 | Model | ID | Best For |
 |---|---|---|
 | Nano Banana | `gemini-2.5-flash-image` | Speed and efficiency, high-volume, low-latency tasks |
+| Nano Banana 2 | `gemini-3.1-flash-image-preview` | High-quality generation at low latency, improved text rendering and i18n, resolution control |
 | Nano Banana Pro | `gemini-3-pro-image-preview` | Professional asset production, advanced reasoning, high-res output |
 
 Legacy models (`gemini-2.0-*`, `gemini-1.5-*`) are deprecated.
@@ -93,9 +94,16 @@ for part in response.candidates[0].content.parts:
 **`candidate_count`**: Number of images to generate per request (1-4).
 
 **`image_config`** options:
-- `aspect_ratio`: `1:1`, `2:3`, `3:2`, `3:4`, `4:3`, `4:5`, `5:4`, `9:16`, `16:9`, `21:9`
-- `image_size`: `"1K"`, `"2K"`, `"4K"` (Nano Banana Pro only, uppercase K required)
+- `aspect_ratio`: `1:1`, `1:4`, `1:8`, `2:3`, `3:2`, `3:4`, `4:1`, `4:3`, `4:5`, `5:4`, `8:1`, `9:16`, `16:9`, `21:9`
+- `image_size`: `"0.5K"`, `"1K"`, `"2K"`, `"4K"` (Nano Banana 2 and Nano Banana Pro only)
 - `person_generation`: `"DONT_ALLOW"`, `"ALLOW_ADULT"`, `"ALLOW_ALL"`
+
+### Advanced Features (Nano Banana 2)
+
+- **Resolution control**: 0.5K, 1K (default), 2K, and 4K generation via `image_size`.
+- **Improved text rendering**: Better quality and i18n text rendering within images.
+- **Extended aspect ratios**: Additional ratios including `1:4`, `4:1`, `1:8`, `8:1`.
+- **Search grounding**: Text and image search integration for real-time data.
 
 ### Advanced Features (Nano Banana Pro)
 
@@ -126,7 +134,7 @@ for part in response.candidates[0].content.parts:
 - Image quality varies with prompt specificity.
 - Maximum input image size: 20MB.
 - Supported input formats: PNG, JPEG, WebP, GIF.
-- `image_size` (high-res) is only available with Nano Banana Pro (`gemini-3-pro-image-preview`).
+- `image_size` is only available with Nano Banana 2 (`gemini-3.1-flash-image-preview`) and Nano Banana Pro (`gemini-3-pro-image-preview`).
 
 ## Usage
 
@@ -192,4 +200,4 @@ uv run --project runtime runtime/generate_image.py "A logo design" -o path/to/ou
 - Safety filters may reject certain prompts without generating images.
 - Image editing requires the input image to be under 20MB.
 - Supported input formats for editing: PNG, JPEG, WebP, GIF.
-- `--image-size` only works with `gemini-3-pro-image-preview`.
+- `--image-size` only works with `gemini-3.1-flash-image-preview` and `gemini-3-pro-image-preview`.

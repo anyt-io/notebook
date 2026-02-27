@@ -10,23 +10,28 @@ DEFAULT_MODEL = "gemini-2.5-flash-image"
 
 AVAILABLE_MODELS = [
     "gemini-2.5-flash-image",
+    "gemini-3.1-flash-image-preview",
     "gemini-3-pro-image-preview",
 ]
 
 SUPPORTED_ASPECT_RATIOS = [
     "1:1",
+    "1:4",
+    "1:8",
     "2:3",
     "3:2",
     "3:4",
+    "4:1",
     "4:3",
     "4:5",
     "5:4",
+    "8:1",
     "9:16",
     "16:9",
     "21:9",
 ]
 
-SUPPORTED_IMAGE_SIZES = ["1K", "2K", "4K"]
+SUPPORTED_IMAGE_SIZES = ["0.5K", "1K", "2K", "4K"]
 
 PERSON_GENERATION_OPTIONS = ["DONT_ALLOW", "ALLOW_ADULT", "ALLOW_ALL"]
 

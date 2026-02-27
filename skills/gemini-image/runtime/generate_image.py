@@ -57,7 +57,7 @@ def main() -> int:
     parser.add_argument(
         "--image-size",
         choices=SUPPORTED_IMAGE_SIZES,
-        help="Output resolution: 1K, 2K, 4K (gemini-3-pro-image-preview only)",
+        help="Output resolution: 0.5K, 1K, 2K, 4K (Nano Banana 2 and Nano Banana Pro only)",
     )
     parser.add_argument(
         "--person-generation",
