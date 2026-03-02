@@ -1,8 +1,8 @@
 # AnyT Notebook File Specification
 
-> **Spec version**: `2.3`
+> **Spec version**: `2.4`
 > **Schema version**: `2.0`
-> **Last updated**: 2026-02-19
+> **Last updated**: 2026-03-01
 > **Purpose**: Complete specification for generating valid `.anyt.md` notebook files.
 > This document is designed to be consumed by AI systems as a reference for
 > creating, editing, and validating AnyT notebooks.
@@ -11,12 +11,20 @@
 
 | Spec Version | Schema Version | Date | Description |
 |--------------|----------------|------|-------------|
-| **2.3** | **2.0** | 2026-02-19 | Add `skip` attribute for break cells, global skip breakpoints toggle. Multi-document sessions. |
+| **2.4** | **2.0** | 2026-03-01 | Add `file` field type for file picker inputs. |
+| 2.3 | 2.0 | 2026-02-19 | Add `skip` attribute for break cells, global skip breakpoints toggle. Multi-document sessions. |
 | 2.2 | 2.0 | 2026-02-13 | Add `agent` attribute, `agents` frontmatter, health checks. Remove v1 schema. |
 | 2.1 | 2.0 | 2026-02-10 | Add `label` attribute. Cell IDs read-only in UI. |
 | 2.0 | 2.0 | 2026-02-05 | Initial schema 2.0. Structure-only file with folder-based state. |
 
 ### Changelog
+
+#### 2.4 (2026-03-01)
+- **Added** `file` field type for file picker inputs in input cells
+- **Added** `FileValue` format for file field values (filename, path, relativePath)
+- **Added** `accept` property for filtering file types (e.g., `image/*`, `.pdf,.doc`)
+- **Added** `multiple` property for allowing multiple file selection
+- **Added** file validation rules: `maxFiles`, `minFiles`
 
 #### 2.3 (2026-02-19)
 - **Added** optional `skip` attribute on break cells to skip them during execution
@@ -372,6 +380,7 @@ The `<form>` block contains a JSON object with a `fields` array. Each field obje
 | `select` | Dropdown (single selection) |
 | `radio` | Radio button group |
 | `multiselect` | Checkbox group (multiple selection) |
+| `file` | File picker (single or multiple files) |
 
 **Options** (for select, radio, multiselect): array of objects with `value` and `label`:
 ```json
@@ -380,6 +389,28 @@ The `<form>` block contains a JSON object with a `fields` array. Each field obje
   { "value": "postgres", "label": "PostgreSQL" }
 ]
 ```
+
+**File field properties** (for file type):
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `accept` | string | File filter pattern: `"image/*"`, `"video/*"`, `".pdf,.doc"`, `"*/*"` (default) |
+| `multiple` | boolean | Allow multiple file selection (default: false) |
+
+**FileValue format** (stored in response.json):
+```json
+{
+  "filename": "photo.jpg",
+  "path": "/Users/user/Downloads/photo.jpg",
+  "relativePath": "assets/photo.jpg"
+}
+```
+
+- `filename`: Display name of the file
+- `path`: Absolute file path (always present, used by AI agents)
+- `relativePath`: Path relative to workdir (only present if file is within workdir)
+
+For multiple files, the value is an array of `FileValue` objects.
 
 **Validation rules:**
 
@@ -393,6 +424,8 @@ The `<form>` block contains a JSON object with a `fields` array. Each field obje
 | `step` | number | number |
 | `minItems` | multiselect | number |
 | `maxItems` | multiselect | number |
+| `minFiles` | file (multiple) | number |
+| `maxFiles` | file (multiple) | number |
 
 **Example:**
 ```xml
@@ -453,6 +486,20 @@ Set up the initial project parameters:
       "name": "isPublic",
       "type": "checkbox",
       "label": "Public Repository"
+    },
+    {
+      "name": "logo",
+      "type": "file",
+      "label": "Project Logo",
+      "accept": "image/*"
+    },
+    {
+      "name": "documents",
+      "type": "file",
+      "label": "Reference Documents",
+      "accept": ".pdf,.doc,.docx,.md",
+      "multiple": true,
+      "validation": { "maxFiles": 5 }
     }
   ]
 }
@@ -777,6 +824,13 @@ Configure your new project:
         { "value": "queue", "label": "Queue" }
       ],
       "validation": { "minItems": 1 }
+    },
+    {
+      "name": "configFile",
+      "type": "file",
+      "label": "Import Config",
+      "description": "Optionally import an existing config file",
+      "accept": ".json,.yaml,.yml"
     }
   ]
 }
@@ -873,6 +927,87 @@ cd pipeline-output && python analyze.py
 ## Pipeline Complete
 
 Files: `raw/sales.csv`, `processed/sales-clean.csv`, `reports/summary.*`
+</note>
+```
+
+### File Upload Workflow
+
+```yaml
+---
+schema: "2.0"
+name: image-processor
+workdir: image-output
+---
+
+# image-processor
+
+<input id="upload-images" label="Upload Images">
+## Image Processing
+
+Select images to process:
+
+<form type="json">
+{
+  "fields": [
+    {
+      "name": "images",
+      "type": "file",
+      "label": "Images",
+      "accept": "image/*",
+      "multiple": true,
+      "required": true,
+      "validation": { "minFiles": 1, "maxFiles": 10 }
+    },
+    {
+      "name": "watermark",
+      "type": "file",
+      "label": "Watermark (optional)",
+      "accept": "image/png",
+      "description": "PNG with transparency for watermarking"
+    },
+    {
+      "name": "outputFormat",
+      "type": "select",
+      "label": "Output Format",
+      "default": "webp",
+      "options": [
+        { "value": "webp", "label": "WebP" },
+        { "value": "jpeg", "label": "JPEG" },
+        { "value": "png", "label": "PNG" }
+      ]
+    },
+    {
+      "name": "maxWidth",
+      "type": "number",
+      "label": "Max Width (px)",
+      "default": 1920,
+      "validation": { "min": 100, "max": 4096 }
+    }
+  ]
+}
+</form>
+</input>
+
+<shell id="setup" label="Setup Output Directory">
+mkdir -p image-output/processed
+</shell>
+
+<task id="process" label="Process Images">
+Using the uploaded images from the "upload-images" step:
+- Resize each image to the specified maxWidth (maintaining aspect ratio)
+- Convert to the selected outputFormat
+- If a watermark was provided, apply it to the bottom-right corner
+- Save processed images to image-output/processed/
+
+Use the file paths from the form response to access the uploaded files.
+
+**Output:** processed/*.{outputFormat}
+</task>
+
+<note id="complete" label="Processing Complete">
+## Images Processed
+
+Check `image-output/processed/` for the converted images.
 </note>
 ```
 
