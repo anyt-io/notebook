@@ -65,7 +65,7 @@ The notebook shows you every step, in order, before anything runs. You can see t
 
 AnyT Notebook provides five cell types, each serving a distinct role in the workflow:
 
-**Task Cells** -- The AI does the work. You write a natural language instruction, and the AI agent (Claude Code or Codex) executes it. The agent can read files, write code, run commands -- whatever's needed to fulfill the instruction. Output is streamed in real-time so you can watch progress.
+**Task Cells** -- The AI does the work. You write a natural language instruction, and the AI agent (Claude Code, Codex, or Gemini) executes it. The agent can read files, write code, run commands -- whatever's needed to fulfill the instruction. Output is streamed in real-time so you can watch progress.
 
 **Shell Cells** -- Deterministic execution. You write a shell script, and it runs directly -- no AI involved. Fast, predictable, and cheap. Use these for installation, building, testing, deployment, or any step where you know exactly what command to run.
 

@@ -25,8 +25,9 @@ AnyT Notebook works with multiple AI runtimes:
 |---------|--------|-------|
 | **Claude Code** | Primary | Full support with streaming output |
 | **Codex** | Supported | Full support with JSON output |
+| **Gemini CLI** | Supported | Full support with streaming output |
 
-Select your runtime from the dropdown in the notebook toolbar. Switch between runtimes at any time. Use **agent profiles** to configure different runtimes per-notebook or per-cell -- for example, use Claude Code for complex reasoning tasks and a faster runtime for simpler ones.
+Select your runtime from the dropdown in the notebook toolbar. Switch between runtimes at any time. Configure different runtimes per-notebook or per-cell via VS Code settings -- for example, use Claude Code for complex reasoning tasks and a faster runtime for simpler ones.
 
 ## Installation
 
@@ -62,7 +63,7 @@ AnyT Notebook provides five cell types. Mix and match them to build workflows th
 
 ### Task
 
-Task cells are executed by your AI agent (Claude Code or Codex). Write a natural language instruction and the agent carries it out. Use tasks for anything that requires reasoning, code generation, or multi-file changes.
+Task cells are executed by your AI agent (Claude Code, Codex, or Gemini). Write a natural language instruction and the agent carries it out. Use tasks for anything that requires reasoning, code generation, or multi-file changes.
 
 > *Example: "Create a REST API with Express.js and TypeScript, including user authentication routes."*
 
@@ -127,7 +128,7 @@ Open Command Palette -> **"AnyT: Open Sample Notebook"** -> pick one -> click Ru
 
 | Setting | Default | Description |
 |---------|---------|-------------|
-| `anyt.agent` | `"claude"` | AI agent (`claude` or `codex`) |
+| `anyt.agent` | `"claude"` | AI agent (`claude`, `codex`, or `gemini`) |
 | `anyt.autoVersion` | `true` | Auto-version on changes |
 | `anyt.shell.path` | `""` | Custom shell path for shell cells |
 | `anyt.shell.loginShell` | `true` | Use login shell to source profile files |
@@ -151,7 +152,7 @@ All other actions (run, stop, reset, add cells) are available directly from the 
 
 ## Requirements
 
-- **Claude Code CLI** installed and authenticated ([install guide](https://docs.anthropic.com/en/docs/claude-code)) or **Codex CLI** installed
+- **Claude Code CLI** installed and authenticated ([install guide](https://docs.anthropic.com/en/docs/claude-code)), **Codex CLI** installed, or **Gemini CLI** installed ([install guide](https://github.com/google-gemini/gemini-cli))
 - VS Code 1.85+
 
 ---
