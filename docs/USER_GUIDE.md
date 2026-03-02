@@ -43,7 +43,7 @@ This guide covers everything you need to know to create and run AI-powered workf
 3. The notebook editor opens with an empty canvas
 4. Click **+ Task**, **+ Shell**, **+ Input**, **+ Break**, or **+ Note** in the toolbar to add cells
 5. Edit cells with the rich text editor (supports bold, italic, headings, lists, and code blocks with syntax highlighting) or switch to the Markdown tab for raw editing
-6. Select your AI runtime from the toolbar dropdown (Claude Code or Codex)
+6. Select your AI runtime from the toolbar dropdown (Claude Code, Codex, or Gemini)
 7. Click **Run** to execute the notebook step by step
 
 ### Understanding the Workdir
@@ -73,6 +73,7 @@ Choose your AI runtime from the dropdown:
 
 - **Claude Code**: Anthropic's AI coding assistant (recommended)
 - **Codex**: OpenAI's code generation model
+- **Gemini**: Google's Gemini CLI
 
 ### Permission Mode
 
@@ -95,7 +96,7 @@ Each cell shows:
 
 ### Task Cells
 
-Task cells are executed by your AI agent (Claude Code or Codex). Write clear, specific instructions describing what you want the agent to accomplish.
+Task cells are executed by your AI agent (Claude Code, Codex, or Gemini). Write clear, specific instructions describing what you want the agent to accomplish.
 
 **Tips for effective tasks:**
 

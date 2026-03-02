@@ -5,6 +5,34 @@ All notable changes to AnyT Notebook will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.20.0] - 2026-03-02
+
+### Added
+
+- File picker support for input cells with a new `file` field type
+- File field type support in the web editor and schema parser validation
+
+### Changed
+
+- Updated documentation to include Gemini CLI as a supported runtime
+
+## [0.19.0] - 2026-02-27
+
+### Added
+
+- Gemini CLI as a supported coding agent for task cell execution
+
+## [0.18.0] - 2026-02-27
+
+### Changed
+
+- Simplified agent configuration from profiles to VS Code settings for easier setup
+- Separated "set default" from "apply to all cells" in agent selector for clearer UX
+
+### Fixed
+
+- ExecutionState fields in web-state-provider now match interface definition
+
 ## [0.17.2] - 2026-02-25
 
 ### Changed
