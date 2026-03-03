@@ -36,7 +36,6 @@ An `.anyt` file has two sections: YAML frontmatter and a body with cell tags.
 | `workdir` | string | No | `"anyt_workspace"` | Working directory for execution (relative to notebook file). Use `anyt_workspace_` prefix (e.g., `anyt_workspace_yt_summarizer`). |
 | `env_file` | string | No | `".env"` | Path to .env file for secrets |
 | `dependencies` | object | No | — | Skill dependencies as `name: version` pairs |
-| `agents` | array | No | — | Agent profiles for configuring AI runtime engines (see below) |
 
 Minimal valid frontmatter:
 
@@ -72,36 +71,23 @@ env_file: "secrets/prod.env"  # Relative path
 
 Priority (highest to lowest): .env file > shell profile.
 
-### Agent Profiles
+### Agent Configuration
 
-The `agents` field defines named, reusable agent configurations for AI runtime engines:
+Agent configuration is managed via VS Code settings (`anyt.agent` and `anyt.agents`), not in the notebook file. The `agents` frontmatter field is no longer used — agent selection happens through the VS Code settings UI or the runtime dropdown in the toolbar.
 
-```yaml
-agents:
-  - id: claude-default
-    name: Claude Code
-    type: claude
-    default: true
-    permissionMode: bypassPermissions
-    model: ""
-  - id: codex-fast
-    name: Codex
-    type: codex
-    permissionMode: dangerously-bypass
-    model: ""
+Supported runtimes: `claude`, `codex`, `gemini`.
+
+Per-cell agent override uses the `agent` attribute with the runtime type name:
+
+```xml
+<task id="complex-reasoning" agent="claude">
+...
+</task>
+
+<task id="quick-edit" agent="gemini">
+...
+</task>
 ```
-
-| Property | Type | Required | Description |
-|----------|------|----------|-------------|
-| `id` | string | Yes | Unique identifier for this profile |
-| `name` | string | Yes | Display name for the profile |
-| `type` | `"claude" \| "codex"` | Yes | Runtime type |
-| `default` | boolean | No | Whether this is the default profile |
-| `permissionMode` | string | No | Permission mode for execution |
-| `model` | string | No | Model to use |
-| `additionalArgs` | string[] | No | Additional CLI arguments |
-
-Cells can reference an agent profile by its `id` using the `agent` attribute.
 
 ## Cell Types
 
@@ -125,7 +111,7 @@ All cells use XML-like tags with a required `id` attribute and optional `label`,
 |-----------|----------|-------------|
 | `id` | Yes | Unique technical identifier (slug format). Used for file paths and folder names. |
 | `label` | No | Human-friendly display name. Shown as the primary cell name in the UI. Can contain spaces and mixed case. |
-| `agent` | No | Agent profile ID to use for this cell. Overrides the notebook's default agent profile. Must reference a profile defined in the `agents` frontmatter field. |
+| `agent` | No | Agent type to use for this cell (`claude`, `codex`, or `gemini`). Overrides the default agent from VS Code settings. |
 | `skip` | No | Set to `"true"` to skip this break cell during execution. Only valid on `break` cells. |
 
 Rules:
@@ -157,7 +143,7 @@ Use Express.js with TypeScript and proper error handling.
 - Reference input cell responses
 - Use `**Output:** file1, file2` to declare expected output files
 - **Do NOT include explicit CLI commands** for installed skills — just describe what to do (inputs/outputs) and name the skill. The AI agent reads the skill's SKILL.md and determines the correct commands itself.
-- Use the `agent` attribute to override the default agent profile for this cell
+- Use the `agent` attribute to override the default runtime for this cell (e.g., `agent="gemini"`)
 
 ### Shell Cell
 
@@ -233,7 +219,7 @@ Pauses execution and displays a form. Resumes when user submits.
 </input>
 ```
 
-**Field types:** `text`, `textarea`, `number`, `checkbox`, `select`, `radio`, `multiselect`
+**Field types:** `text`, `textarea`, `number`, `checkbox`, `select`, `radio`, `multiselect`, `file`
 
 **Field properties:**
 
@@ -248,7 +234,24 @@ Pauses execution and displays a form. Resumes when user submits.
 | `placeholder` | No | Placeholder text |
 | `options` | Conditional | Options array for select/radio/multiselect: `[{ "value": "v", "label": "L" }]` |
 | `rows` | No | Textarea rows (default: 3) |
-| `validation` | No | Rules: `minLength`, `maxLength`, `pattern`, `min`, `max`, `step`, `minItems`, `maxItems` |
+| `validation` | No | Rules: `minLength`, `maxLength`, `pattern`, `min`, `max`, `step`, `minItems`, `maxItems`, `minFiles`, `maxFiles` |
+
+**File field properties** (for `file` type):
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `accept` | string | File filter pattern: `"image/*"`, `"video/*"`, `".pdf,.doc"`, `"*/*"` (default) |
+| `multiple` | boolean | Allow multiple file selection (default: false) |
+
+File field example:
+```json
+{
+  "name": "logo",
+  "type": "file",
+  "label": "Project Logo",
+  "accept": "image/*"
+}
+```
 
 **Input without form** (action buttons only):
 
@@ -336,7 +339,7 @@ When generating a notebook, ensure:
 10. Include `# {name}` heading after frontmatter, matching `name`
 11. Cell tags only accept `id`, `label`, `agent`, and `skip` attributes — no other attributes allowed
 12. Labels are free-form text, optional — use human-readable names (e.g., `"Setup Environment"`)
-13. The `agent` attribute must reference a valid profile `id` from the `agents` frontmatter field
+13. The `agent` attribute must be a valid runtime type: `claude`, `codex`, or `gemini`
 14. The `skip` attribute is only valid on `break` cells. Its only valid value is `"true"`
 
 ## Complete Example
@@ -409,4 +412,4 @@ Run: `npx tsc && node dist/app.js`
 - **Use input cells** to collect user configuration before AI tasks that depend on choices
 - **Set workdir** to keep all generated files organized in one directory
 - **Add labels** to cells for readability — labels are shown as the primary name in the UI (e.g., `label="Setup Environment"`)
-- **Use agent profiles** to configure different AI runtimes per cell when needed
+- **Use the `agent` attribute** to configure different AI runtimes per cell when needed (e.g., `agent="gemini"`)
