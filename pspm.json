@@ -1,0 +1,6 @@
+{
+  "dependencies": {},
+  "githubDependencies": {
+    "github:anthropics/skills/skills/skill-creator": "HEAD"
+  }
+}

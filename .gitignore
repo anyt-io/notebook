@@ -9,6 +9,17 @@ Thumbs.db
 *.swo
 *~
 
+# AI agent configs
+.codex/
+.cursor/
+.gemini/
+.kiro/
+.opencode/
+
+# Installed skills (managed by pspm)
+.pspm/
+.claude/skills/skill-creator
+
 # Python
 .venv/
 .ruff_cache/
