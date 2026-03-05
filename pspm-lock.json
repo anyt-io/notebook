@@ -1,0 +1,15 @@
+{
+  "$schema": "https://pspm.dev/schema/v1/pspm-lock.json",
+  "lockfileVersion": 3,
+  "registryUrl": "https://pspm.dev/api/skills",
+  "packages": {},
+  "githubPackages": {
+    "github:anthropics/skills/skills/skill-creator": {
+      "version": "7029232",
+      "resolved": "https://github.com/anthropics/skills",
+      "integrity": "sha256-Y73B3xS2nMBDiHQcKimBPUHzf/LN2ricq4ekfHkxAQo=",
+      "gitCommit": "7029232b9212482c0476da354b83364bd28fab2f",
+      "gitRef": "HEAD"
+    }
+  }
+}

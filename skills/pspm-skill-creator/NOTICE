@@ -1,0 +1,15 @@
+PSPM Skill Creator
+Copyright 2024-2026 supercarl87
+
+This product includes software developed by Anthropic, PBC.
+https://github.com/anthropics/skills
+
+Portions of this software are derived from the Anthropic skill-creator skill,
+which is licensed under the Apache License, Version 2.0.
+
+The following components were adapted from Anthropic's skill-creator:
+- Evaluation workflow and phase-based skill development process
+- Subagent instructions (agents/grader.md, agents/comparator.md, agents/analyzer.md)
+- JSON schemas for evals, grading, and benchmarking
+- Eval viewer HTML template and review server
+- Benchmark aggregation logic

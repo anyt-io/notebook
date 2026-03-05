@@ -1,6 +1,6 @@
 [project]
 name = "pspm-skill-creator"
-version = "0.2.0"
+version = "0.3.0"
 description = "PSPM skill creator - initialize, validate, and package PSPM skills"
 requires-python = ">=3.10"
 dependencies = [
@@ -29,6 +29,10 @@ select = [
     "SIM", # flake8-simplify
     "RUF", # ruff-specific rules
 ]
+ignore = ["SIM105"]  # contextlib.suppress preference
+
+[tool.ruff.lint.per-file-ignores]
+"generate_review.py" = ["E501"]  # embedded HTML has long lines
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
