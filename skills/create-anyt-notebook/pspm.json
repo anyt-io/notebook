@@ -1,8 +1,8 @@
 {
   "$schema": "https://pspm.dev/schema/v1/pspm.json",
   "name": "create-anyt-notebook",
-  "version": "0.5.0",
-  "description": "Create AnyT Notebook (.anyt.md) files for AI agent workflows",
+  "version": "0.6.0",
+  "description": "Create AnyT Notebook (.anyt) files for AI agent workflows",
   "author": "Bin Sheng <supercarl87@gmail.com>",
   "license": "Apache-2.0",
   "type": "skill",
