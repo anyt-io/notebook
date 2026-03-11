@@ -1,0 +1,20 @@
+{
+  "$schema": "https://pspm.dev/schema/v1/pspm.json",
+  "name": "telegram-media-skill",
+  "version": "0.1.0",
+  "description": "Emit OpenClaw MEDIA lines for Telegram and other chat channels from local files. Use when a user wants to send an existing image or file from disk, turn a relative path into an absolute path, validate that a local file exists, or return reply text that includes MEDIA:/absolute/path on its own line.",
+  "author": "Bin Sheng",
+  "license": "MIT",
+  "type": "skill",
+  "capabilities": [],
+  "main": "SKILL.md",
+  "requirements": {
+    "pspm": ">=0.1.0"
+  },
+  "files": [
+    "SKILL.md",
+    "runtime"
+  ],
+  "dependencies": {},
+  "private": false
+}
