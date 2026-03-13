@@ -1,16 +1,17 @@
 {
   "$schema": "https://pspm.dev/schema/v1/pspm.json",
   "name": "run-anyt-notebook",
-  "version": "0.1.0",
-  "description": "Run and execute AnyT Notebook (.anyt) files from a coding agent",
+  "version": "0.2.0",
+  "description": "Run and execute AnyT Notebook (.anyt.md) files using the notebook-cli",
   "author": "Bin Sheng <supercarl87@gmail.com>",
   "license": "Apache-2.0",
   "type": "skill",
   "capabilities": [
-    "Run AnyT notebooks",
-    "Parse .anyt.md files",
-    "Execute notebook cells",
-    "Manage notebook workspace and state"
+    "Run AnyT notebooks via notebook-cli",
+    "Execute notebook cells (task, shell, input, break, note)",
+    "Manage notebook workspace and state",
+    "Handle input forms and break points",
+    "Resume interrupted notebook execution"
   ],
   "main": "SKILL.md",
   "requirements": {
@@ -18,8 +19,7 @@
   },
   "files": [
     "SKILL.md",
-    "references",
-    "runtime"
+    "references"
   ],
   "dependencies": {},
   "private": false
