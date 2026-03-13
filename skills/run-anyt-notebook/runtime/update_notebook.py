@@ -67,8 +67,9 @@ def update_cell_content(file_path: Path, cell_id: str, new_content: str) -> None
     file_path.write_text("\n".join(new_lines), encoding="utf-8")
 
 
-def add_cell(file_path: Path, cell_type: str, cell_id: str, content: str, label: str | None = None,
-             after: str | None = None) -> None:
+def add_cell(
+    file_path: Path, cell_type: str, cell_id: str, content: str, label: str | None = None, after: str | None = None
+) -> None:
     """Add a new cell to the notebook. Inserts after the specified cell ID, or appends to the end."""
     if not file_path.exists():
         raise ParseError(f"File not found: {file_path}")
@@ -170,8 +171,9 @@ def main() -> int:
 
     # add command
     add_parser = subparsers.add_parser("add", help="Add a new cell")
-    add_parser.add_argument("--type", required=True, choices=["task", "shell", "input", "note", "break"],
-                            help="Cell type")
+    add_parser.add_argument(
+        "--type", required=True, choices=["task", "shell", "input", "note", "break"], help="Cell type"
+    )
     add_parser.add_argument("--id", required=True, help="Cell ID")
     add_parser.add_argument("--content", required=True, help="Cell content")
     add_parser.add_argument("--label", help="Cell label")
