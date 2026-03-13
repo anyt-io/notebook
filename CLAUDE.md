@@ -99,3 +99,23 @@ npx @anytio/pspm@latest add @user/<username>/<skillname> -y
 ## Skill Guide
 
 See [docs/skill-development-guide.md](docs/skill-development-guide.md) for the full skill development conventions.
+
+## Cross-Repo Sync
+
+This public repo receives documentation from the private `anyt-io` monorepo.
+
+| Repo | Path | Purpose |
+|------|------|---------|
+| **anyt-io** (private) | `/Users/bsheng/work/anyt-io` | Source of truth for README, CHANGELOG, notebook extension, spec |
+| **notebook** (this repo) | `/Users/bsheng/work/notebook` | Public repo: skills, sample notebooks, product docs |
+
+### Slash Commands
+
+- `/sync-from-upstream` — Pull latest README, CHANGELOG, and examples from anyt-io (can also be done from anyt-io via `/update-public-repo`)
+
+### Stub Files — Do NOT Overwrite
+
+These files are intentional stubs pointing to canonical sources elsewhere:
+- `docs/anyt-notebook-spec.md` — stub pointing to docs.anyt.io (canonical: `anyt-io/docs/anyt-notebook-spec.md`)
+- `docs/pspm-cli-guide.md` — stub pointing to pspm.dev docs
+- `docs/PRODUCT.md` — native to this repo, not synced from anyt-io

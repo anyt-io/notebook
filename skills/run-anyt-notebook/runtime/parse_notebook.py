@@ -208,7 +208,7 @@ def _parse_cells(lines: list[str], start_idx: int) -> list[Cell]:
         i += 1
 
     if current_cell is not None:
-        raise ParseError(f"Unclosed cell tag: <{current_cell.cell_type} id=\"{current_cell.id}\"> has no closing tag")
+        raise ParseError(f'Unclosed cell tag: <{current_cell.cell_type} id="{current_cell.id}"> has no closing tag')
 
     return cells
 

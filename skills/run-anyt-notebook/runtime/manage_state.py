@@ -63,8 +63,9 @@ def get_all_status(workdir: Path, cell_ids: list[str]) -> list[dict[str, str]]:
     return [{"id": cid, "status": get_cell_status(workdir, cid)} for cid in cell_ids]
 
 
-def mark_done(workdir: Path, cell_id: str, duration: float | None = None,
-              extra: dict[str, object] | None = None) -> None:
+def mark_done(
+    workdir: Path, cell_id: str, duration: float | None = None, extra: dict[str, object] | None = None
+) -> None:
     """Mark a cell as completed successfully."""
     cell_dir = _cell_dir(workdir, cell_id)
     cell_dir.mkdir(parents=True, exist_ok=True)
