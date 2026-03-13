@@ -5,321 +5,477 @@ description: Run and execute AnyT Notebook (.anyt.md) files. Use when the user w
 
 # Run AnyT Notebook
 
-Execute `.anyt.md` notebook files by parsing cells and running them sequentially. This skill teaches you how to handle workspaces, load environment variables, execute each cell type, and track execution state.
+Execute `.anyt.md` notebook files using the `notebook-cli` command-line tool. This skill teaches you how to install the CLI, run notebooks, handle each cell type, manage workspaces, fill in input forms, handle errors, and resume interrupted runs.
 
 For the complete file format specification, see [references/anyt-notebook-spec.md](references/anyt-notebook-spec.md).
 
 ## Prerequisites
 
-- `uv` (Python package manager) — for running the parser and state management scripts
-
-## Overview
-
-An AnyT Notebook (`.anyt.md`) contains YAML frontmatter and ordered cell tags. You — the coding agent — are the runtime. You parse the notebook, set up the workspace, and execute each cell in order.
-
-**Cell types and how you handle them:**
-
-| Cell Type | What You Do |
-|-----------|-------------|
-| `task` | Execute the natural language instructions yourself (you are the AI agent) |
-| `shell` | Run the bash script via the Bash tool |
-| `input` | Ask the user for the requested information, or read from saved response |
-| `note` | Display the content to the user, then continue |
-| `break` | Pause and ask the user if they want to continue |
-
-## Step-by-Step Execution
-
-### 1. Parse the Notebook
-
-Use the parser to get structured JSON:
+Install the CLI globally via npm:
 
 ```bash
-uv run --project runtime runtime/parse_notebook.py path/to/notebook.anyt.md
+npm install -g @anytio/notebook-cli
 ```
 
-This outputs JSON with `schema`, `name`, `workdir`, `env_file`, `cells`, etc.
-
-To validate before running:
+Verify installation:
 
 ```bash
-uv run --project runtime runtime/parse_notebook.py path/to/notebook.anyt.md --validate
+notebook-cli --help
 ```
 
-To inspect a single cell:
+**Requirements:** Node.js >= 22
+
+## Quick Start
+
+Run a notebook end-to-end:
 
 ```bash
-uv run --project runtime runtime/parse_notebook.py path/to/notebook.anyt.md --cell setup-env
+notebook-cli run path/to/notebook.anyt.md
 ```
 
-### 2. Set Up the Workspace
+That's it. The CLI parses the file, creates the workspace, and executes all cells sequentially. It handles input prompts interactively, pauses at break cells, and stops on failure.
 
-The `workdir` field (from frontmatter) is the working directory for all execution. It is relative to the notebook file's location.
+## How Notebooks Work
 
-```bash
-# Resolve workdir relative to the notebook file
-NOTEBOOK_DIR=$(dirname path/to/notebook.anyt.md)
-WORKDIR="$NOTEBOOK_DIR/<workdir-value>"
+An AnyT Notebook (`.anyt.md`) is a markdown file with YAML frontmatter and ordered cell tags. The file stores **structure only** — all execution state lives in a `.anyt/cells/` folder inside the workspace directory.
 
-# Create the workspace
-mkdir -p "$WORKDIR"
+### File Structure
 
-# Create state directory
-mkdir -p "$WORKDIR/.anyt/cells"
+```yaml
+---
+schema: "2.0"
+name: my-notebook
+workdir: anyt_workspace_my_notebook
+---
+
+# my-notebook
+
+<note id="note-intro" label="Overview">
+This notebook does XYZ.
+</note>
+
+<input id="input-config" label="Configuration">
+Configure settings before running.
+
+<form type="json">
+{"fields": [{"name": "apiKey", "type": "text", "label": "API Key", "required": true}]}
+</form>
+</input>
+
+<shell id="shell-setup" label="Setup">
+mkdir -p src && echo "Ready"
+</shell>
+
+<task id="task-main" label="Main Task">
+Build the application based on the user's configuration from the input cell.
+**Output:** src/app.ts
+</task>
+
+<break id="break-review" label="Review">
+Check the generated code before continuing.
+</break>
 ```
 
-**Important:** All file paths in cells are relative to `workdir`. When running shell cells or executing task instructions, `cd` into the workdir first.
+### Cell Types
 
-### 3. Load Environment Variables
+| Cell Type | What Happens | Executable |
+|-----------|-------------|------------|
+| `task` | AI agent (Claude/Codex/Gemini) executes natural language instructions | Yes |
+| `shell` | Bash script runs directly | Yes |
+| `input` | Pauses for user input (interactive form or JSON values) | Yes |
+| `note` | Auto-completes immediately (documentation only) | No |
+| `break` | Pauses and waits for user to continue | Yes |
 
-If `env_file` is specified (defaults to `.env`), load it before executing cells:
+### Cell Attributes
 
-```bash
-# Resolve env file path relative to notebook directory
-ENV_FILE="$NOTEBOOK_DIR/<env_file-value>"
+All cells require an `id` (slug format: lowercase, alphanumeric, hyphens). Optional attributes:
 
-# Load if it exists
-if [ -f "$ENV_FILE" ]; then
-  set -a
-  source "$ENV_FILE"
-  set +a
-fi
-```
+- `label` — Human-friendly display name
+- `agent` — Override the default agent (`claude`, `codex`, or `gemini`)
+- `skip` — Only for break cells; set to `"true"` to auto-skip
 
-The `.env` file contains secrets like API keys. Never display the contents to the user. If the `.env` file doesn't exist, continue without it — it's optional.
+### Workspace and State
 
-**Priority (highest to lowest):**
-1. `.env` file
-2. Shell profile (`~/.zshrc`, `~/.bash_profile`)
-
-### 4. Execute Cells Sequentially
-
-Process cells in order. Stop on failure.
-
-#### Task Cells
-
-You ARE the AI agent. Execute the task instructions yourself:
-
-1. Read the cell content — it contains natural language instructions
-2. `cd` to the workdir
-3. Execute the instructions (create files, write code, etc.)
-4. Save state:
-   ```bash
-   uv run --project runtime runtime/manage_state.py "$WORKDIR" mark-done --cell <cell-id>
-   ```
-5. If a task references a previous input cell, read the input response first:
-   ```bash
-   uv run --project runtime runtime/manage_state.py "$WORKDIR" read-input --cell <input-cell-id>
-   ```
-
-**Task cell conventions:**
-- `**Output:** file1, file2` declares expected output files
-- Reference previous cells' output files by their paths relative to workdir
-- If the cell has an `agent` attribute, note it but you still execute it (you are the agent)
-
-#### Shell Cells
-
-Run the script content directly:
-
-1. `cd` to the workdir
-2. Execute the bash script using the Bash tool
-3. Save script and output:
-   ```bash
-   uv run --project runtime runtime/manage_state.py "$WORKDIR" mark-done --cell <cell-id>
-   ```
-4. If the script exits with non-zero, mark as failed:
-   ```bash
-   uv run --project runtime runtime/manage_state.py "$WORKDIR" mark-failed --cell <cell-id> --error "Exit code: N"
-   ```
-
-**Important:** Shell cells run in the workdir. Do NOT prefix paths with the workdir name inside the script.
-
-#### Input Cells
-
-Input cells pause execution and collect information from the user. In VS Code this renders as a GUI form; when you run a notebook as a coding agent, you present the fields conversationally and collect answers.
-
-**Step-by-step procedure:**
-
-1. **Check for a saved response first.** A previous run may have already collected this input:
-   ```bash
-   uv run --project runtime runtime/manage_state.py "$WORKDIR" read-input --cell <cell-id>
-   ```
-   If a response exists (exit code 0), use those values and skip to step 6.
-
-2. **Extract the form fields** from the cell content:
-   ```bash
-   # Get structured JSON of all fields (type, label, options, defaults, validation)
-   uv run --project runtime runtime/parse_notebook.py path/to/notebook.anyt.md --form <cell-id>
-
-   # Or get a human-readable prompt to present to the user
-   uv run --project runtime runtime/parse_notebook.py path/to/notebook.anyt.md --form-prompt <cell-id>
-   ```
-
-   The `--form` output is structured JSON:
-   ```json
-   [
-     {"name": "projectName", "field_type": "text", "label": "Project Name", "required": true, "default": null, ...},
-     {"name": "database", "field_type": "select", "label": "Database", "options": [{"value": "sqlite", "label": "SQLite"}, ...], "default": "sqlite", ...}
-   ]
-   ```
-
-   The `--form-prompt` output is a human-readable summary:
-   ```
-   ## Configure Your Project
-
-   - **Project Name** (required)
-   - **Database** — Choose one: SQLite, PostgreSQL [default: sqlite]
-   - **Features** — Choose one or more: Auth, API, Database
-   - **Dev Port** — Number (min: 1024, max: 65535) [default: 3000]
-   - **Public Repository** — Yes/No
-   ```
-
-3. **Present fields to the user.** Show the `--form-prompt` output and ask the user to provide values. For each field type:
-   - **text / textarea**: Ask for free-form text input
-   - **number**: Ask for a numeric value
-   - **checkbox**: Ask Yes/No
-   - **select / radio**: Present the options and ask the user to pick one
-   - **multiselect**: Present the options and ask the user to pick one or more
-   - **file**: Ask for a file path on their local system
-
-   If a field has a `default`, tell the user they can skip it to use the default. If a field is `required`, ensure the user provides a value.
-
-4. **Validate responses.** Check against the field's `validation` rules:
-   - `minLength` / `maxLength` for text fields
-   - `pattern` (regex) for text fields
-   - `min` / `max` for number fields
-   - `minItems` / `maxItems` for multiselect fields
-   - `minFiles` / `maxFiles` for file fields with `multiple`
-
-   If validation fails, tell the user what's wrong and ask again.
-
-5. **Save the response.** Write a `response.json` file to the state directory:
-   ```bash
-   mkdir -p "$WORKDIR/.anyt/cells/<cell-id>"
-   ```
-   Then write `$WORKDIR/.anyt/cells/<cell-id>/response.json` with this format:
-   ```json
-   {
-     "values": {
-       "projectName": "my-app",
-       "database": "postgres",
-       "features": ["auth", "api"],
-       "port": 3000,
-       "isPublic": true
-     },
-     "timestamp": "2026-03-10T12:00:00Z"
-   }
-   ```
-
-   **Value formats by field type:**
-   | Field Type | JSON Value Format |
-   |------------|-------------------|
-   | `text` / `textarea` | `"string"` |
-   | `number` | `123` |
-   | `checkbox` | `true` / `false` |
-   | `select` / `radio` | `"value"` (the `value` from the selected option) |
-   | `multiselect` | `["value1", "value2"]` |
-   | `file` (single) | `{"filename": "photo.jpg", "path": "/abs/path/photo.jpg"}` |
-   | `file` (multiple) | `[{"filename": "a.pdf", "path": "/abs/a.pdf"}, ...]` |
-
-6. **Mark done:**
-   ```bash
-   uv run --project runtime runtime/manage_state.py "$WORKDIR" mark-done --cell <cell-id>
-   ```
-
-**Input cells without forms:** Some input cells have no `<form>` block — just markdown text with action buttons. In this case, display the content to the user and ask how they want to proceed (e.g., continue, edit, skip).
-
-**Making input responses available to later task cells:** When a subsequent task cell references a previous input cell (e.g., "Based on the user's input from the config step"), read the saved response before executing:
-```bash
-uv run --project runtime runtime/manage_state.py "$WORKDIR" read-input --cell <input-cell-id>
-```
-Use the returned JSON values as context when executing the task instructions. For example, if the response has `"database": "postgres"`, use that to guide your code generation.
-
-#### Note Cells
-
-Display the markdown content to the user and continue immediately:
-
-```bash
-uv run --project runtime runtime/manage_state.py "$WORKDIR" mark-done --cell <cell-id>
-```
-
-#### Break Cells
-
-Pause and ask the user whether to continue:
-
-1. If the cell has `skip="true"`, auto-continue:
-   ```bash
-   uv run --project runtime runtime/manage_state.py "$WORKDIR" mark-done --cell <cell-id>
-   ```
-2. Otherwise, display the cell content and ask: "Ready to continue?"
-3. Wait for user confirmation before proceeding.
-
-### 5. Handle Failures
-
-If any cell fails, stop execution. Report what failed and why. The user can fix the issue and ask you to resume from the failed cell.
-
-To resume from a specific cell, re-run the execution loop starting at that cell. Previous cells with `.done` markers are skipped.
-
-### 6. Check Execution Status
-
-```bash
-uv run --project runtime runtime/manage_state.py "$WORKDIR" status --cells cell-1 cell-2 cell-3
-```
-
-### 7. Reset State
-
-Reset a single cell:
-```bash
-uv run --project runtime runtime/manage_state.py "$WORKDIR" reset --cell <cell-id>
-```
-
-Reset all cells:
-```bash
-uv run --project runtime runtime/manage_state.py "$WORKDIR" reset
-```
-
-## Updating Notebooks
-
-To modify a notebook's cell content:
-
-```bash
-uv run --project runtime runtime/update_notebook.py path/to/notebook.anyt.md update --cell <cell-id> --content "New content here"
-```
-
-To add a new cell:
-
-```bash
-uv run --project runtime runtime/update_notebook.py path/to/notebook.anyt.md add --type task --id new-task --content "Do something" --label "New Task" --after existing-cell-id
-```
-
-To remove a cell:
-
-```bash
-uv run --project runtime runtime/update_notebook.py path/to/notebook.anyt.md remove --cell <cell-id>
-```
-
-## State Storage Layout
-
-All execution state lives in `{workdir}/.anyt/cells/`:
+The `workdir` field in frontmatter sets the workspace directory (relative to the notebook file). All execution state is stored in `{workdir}/.anyt/cells/{cell-id}/`:
 
 ```
 {workdir}/.anyt/cells/
 ├── {task-id}/
-│   ├── task.md          # Task description
-│   ├── summary.md       # Summary of what was done
-│   ├── output.log       # Output log
-│   └── .done/.failed    # Completion marker (JSON)
+│   ├── task.md          # Enriched task description
+│   ├── summary.md       # Agent-written summary
+│   ├── output.log       # Formatted output
+│   └── .done            # Completion marker (JSON with outputs, duration)
 ├── {shell-id}/
-│   ├── script.sh        # Script content
+│   ├── script.sh        # Shell script content
 │   ├── output.log       # stdout/stderr
-│   └── .done/.failed
+│   └── .done            # Completion marker
 ├── {input-id}/
-│   ├── response.json    # {"values": {...}, "timestamp": "..."}
+│   ├── response.json    # User's form values
 │   └── .done
 ├── {note-id}/
 │   └── .done
 └── {break-id}/
     └── .done
 ```
+
+## CLI Commands Reference
+
+### `run` — Run All Cells
+
+Run all pending cells sequentially:
+
+```bash
+notebook-cli run notebook.anyt.md
+```
+
+**Key flags:**
+
+| Flag | Description |
+|------|-------------|
+| `--rerun` | Reset all cells and start fresh |
+| `--skip-breaks` | Auto-continue all break cells |
+| `--from <cellId>` | Start from a specific cell (skip earlier ones) |
+| `--auto-input <path>` | JSON file with pre-filled input values |
+| `--agent <type>` | Override agent (`claude`, `codex`, `gemini`) |
+| `--model <name>` | Override the model name |
+| `--permission-mode <mode>` | Override the agent's permission mode |
+| `--verbose` | Show agent tool call names in output |
+
+**Examples:**
+
+```bash
+# Re-run entire notebook from scratch
+notebook-cli run notebook.anyt.md --rerun
+
+# Resume from a specific cell
+notebook-cli run notebook.anyt.md --from task-main
+
+# Skip all break points for unattended execution
+notebook-cli run notebook.anyt.md --skip-breaks
+
+# Pre-fill all input cells from a JSON file
+notebook-cli run notebook.anyt.md --auto-input values.json
+
+# Use a specific agent and model
+notebook-cli run notebook.anyt.md --agent claude --model claude-sonnet-4-5-20250514
+```
+
+### `continue` — Resume Execution
+
+Alias for `run` — resumes from the first uncompleted cell:
+
+```bash
+notebook-cli continue notebook.anyt.md
+```
+
+### `status` — Check Execution Status
+
+Show all cells and their current status:
+
+```bash
+notebook-cli status notebook.anyt.md
+```
+
+Output:
+
+```
+Notebook: my-notebook
+Workdir:  anyt_workspace_my_notebook
+
+ID              TYPE   STATUS   LABEL
+──────────────  ─────  ───────  ────────────────────
+note-intro      note   done     Overview
+input-config    input  done     Configuration
+shell-setup     shell  done     Setup
+task-main       task   FAIL     Main Task
+break-review    break           Review
+
+Total: 5 | Done: 3 | Pending: 1 | Failed: 1 | Skipped: 0
+```
+
+### `run-cell` — Execute a Single Cell
+
+Run one specific cell:
+
+```bash
+notebook-cli run-cell notebook.anyt.md task-main
+```
+
+Flags: `--agent`, `--model`, `--permission-mode`, `--env-file <path>`, `--verbose`
+
+**Note:** Input cells cannot be run with `run-cell` — use `submit-input` instead.
+
+### `reset` — Reset Cell State
+
+```bash
+# Reset a single cell (remove markers, allow re-run)
+notebook-cli reset notebook.anyt.md task-main
+
+# Reset all cells
+notebook-cli reset notebook.anyt.md
+
+# Reset and delete all cell data (output logs, summaries, etc.)
+notebook-cli reset notebook.anyt.md --all
+```
+
+### Global Flags
+
+These work with all commands:
+
+| Flag | Description |
+|------|-------------|
+| `--workspace-dir <path>` | Override the notebook's workspace directory |
+| `--json` | Output machine-readable JSON (for agent consumption) |
+| `--verbose` | Show agent tool call details during execution |
+| `--help` | Show help (use after a command for command-specific help) |
+
+## Handling Input Cells
+
+Input cells pause execution and collect user data. There are three ways to provide values:
+
+### 1. Interactive Prompt (Default)
+
+When running in a terminal, the CLI prompts interactively:
+
+```
+Select the stock to review
+
+Stock (Which Stock to review):
+  1) Nvidia (default)
+  2) Google
+  3) Salesforce
+Choose [1]: 2
+Last days [30]: 12
+```
+
+### 2. Pre-filled Values with `--auto-input`
+
+Create a JSON file mapping cell IDs to their values:
+
+```json
+{
+  "input-config": {
+    "apiKey": "sk-test-123",
+    "model": "gpt-4"
+  },
+  "input-settings": {
+    "port": 3000,
+    "debug": true
+  }
+}
+```
+
+Then run:
+
+```bash
+notebook-cli run notebook.anyt.md --auto-input values.json
+```
+
+### 3. Submit Values via CLI (for Agents)
+
+When running non-interactively (e.g., from another agent), use `submit-input`:
+
+```bash
+# Inline JSON
+notebook-cli submit-input notebook.anyt.md input-config \
+  --values '{"apiKey": "sk-test-123", "model": "gpt-4"}'
+
+# From a file
+notebook-cli submit-input notebook.anyt.md input-config \
+  --values-file config.json
+```
+
+Then re-run to continue past the input cell:
+
+```bash
+notebook-cli continue notebook.anyt.md
+```
+
+### Input Field Types
+
+Input cells define forms with these field types:
+
+| Field Type | Value Format | Example |
+|------------|-------------|---------|
+| `text` / `textarea` | `"string"` | `"hello world"` |
+| `number` | `123` | `3000` |
+| `checkbox` | `true` / `false` | `true` |
+| `select` / `radio` | `"value"` | `"postgres"` |
+| `multiselect` | `["v1", "v2"]` | `["auth", "api"]` |
+| `file` | `{"filename": "f.jpg", "path": "/abs/path"}` | — |
+
+### Reading Input Values from Previous Cells
+
+Task cells automatically receive context about previous input cells. The CLI enriches each task description with instructions to read responses from `.anyt/cells/{input-id}/response.json`.
+
+## Handling Break Cells
+
+Break cells pause execution for manual review:
+
+- **Interactive terminal:** Prompts "press Enter to continue..."
+- **Non-interactive / agent mode:** CLI exits with code `11`, signaling a break. Use `continue-break` to proceed:
+
+```bash
+# Mark break as done so execution can continue
+notebook-cli continue-break notebook.anyt.md break-review
+
+# Then resume
+notebook-cli continue notebook.anyt.md
+```
+
+To skip all breaks automatically:
+
+```bash
+notebook-cli run notebook.anyt.md --skip-breaks
+```
+
+## Using `--workspace-dir`
+
+By default, the workspace is resolved from the notebook's `workdir` frontmatter field, relative to the notebook file. Use `--workspace-dir` to override this:
+
+```bash
+# Run with a custom workspace location
+notebook-cli run notebook.anyt.md --workspace-dir /tmp/my-workspace
+
+# Check status of a specific workspace
+notebook-cli status notebook.anyt.md --workspace-dir /tmp/my-workspace
+
+# Multiple independent runs of the same notebook
+notebook-cli run notebook.anyt.md --workspace-dir run-1
+notebook-cli run notebook.anyt.md --workspace-dir run-2
+```
+
+This is useful for:
+- Running the same notebook multiple times with different workspaces
+- Pointing to an existing workspace with pre-populated data
+- Testing in isolated directories
+
+## Error Handling
+
+### Exit Codes
+
+| Code | Meaning | What to Do |
+|------|---------|-----------|
+| `0` | Success | All cells completed |
+| `1` | Cell failed | Check error output, fix the issue, then `notebook-cli continue` |
+| `2` | Usage error | Check flags and arguments — run `notebook-cli <command> --help` |
+| `10` | Waiting for input | Use `submit-input` to provide values, then `continue` |
+| `11` | Waiting at break | Use `continue-break` to proceed, then `continue` |
+
+### Common Errors and Fixes
+
+**Unknown flag:**
+```
+Error: Unknown flag '--workspace' for command 'run'. Did you mean '--workspace-dir'?
+```
+Fix: Use the correct flag name. The CLI suggests alternatives for typos.
+
+**Invalid agent value:**
+```
+Error: Invalid value 'gpt4' for flag '--agent'. Valid values: claude, codex, gemini
+```
+Fix: Use one of the three supported agent types.
+
+**File not found:**
+```
+Error: File not found: notebook.anyt.md
+```
+Fix: Check the file path. The CLI validates file existence before running.
+
+**Cell execution failure:**
+When a task or shell cell fails, the CLI stops and reports the error:
+```
+[3/5] task: task-main (Main Task)
+  Agent: claude
+  ✗ Failed (15.2s): Agent exited with code 1
+Failed at cell: task-main — Agent exited with code 1
+```
+
+To recover:
+1. Fix the underlying issue
+2. Resume: `notebook-cli continue notebook.anyt.md`
+
+Or reset the failed cell and retry:
+1. `notebook-cli reset notebook.anyt.md task-main`
+2. `notebook-cli continue notebook.anyt.md`
+
+### JSON Mode for Agents
+
+When running from another agent or script, use `--json` for structured output:
+
+```bash
+notebook-cli run notebook.anyt.md --json 2>/dev/null
+```
+
+Output:
+```json
+{
+  "ok": true,
+  "command": "run",
+  "data": {
+    "status": "complete",
+    "results": [
+      {"cellId": "shell-setup", "type": "shell", "status": "done", "duration": 1200},
+      {"cellId": "task-main", "type": "task", "status": "done", "duration": 15000}
+    ]
+  }
+}
+```
+
+When waiting for input:
+```json
+{
+  "ok": true,
+  "command": "run",
+  "data": {
+    "status": "waiting-input",
+    "cellId": "input-config",
+    "description": "Configure settings..."
+  }
+}
+```
+
+## Agent-Driven Workflow (Non-Interactive)
+
+When another AI agent runs a notebook, follow this pattern:
+
+```bash
+# 1. Check status first
+notebook-cli status notebook.anyt.md --json
+
+# 2. Run the notebook
+notebook-cli run notebook.anyt.md --json --skip-breaks
+
+# 3. If exit code is 10 (waiting for input), submit values
+notebook-cli submit-input notebook.anyt.md input-config \
+  --values '{"apiKey": "sk-123"}'
+
+# 4. Resume execution
+notebook-cli continue notebook.anyt.md --json --skip-breaks
+
+# 5. Check final status
+notebook-cli status notebook.anyt.md --json
+```
+
+For fully automated runs, pre-fill all inputs:
+
+```bash
+notebook-cli run notebook.anyt.md --auto-input values.json --skip-breaks
+```
+
+## Supported Agents
+
+The CLI can execute task cells using different AI agents:
+
+| Agent | Flag Value | CLI Used | Default Permission Mode |
+|-------|-----------|----------|------------------------|
+| Claude Code | `claude` | `claude` | bypassPermissions |
+| Codex | `codex` | `codex` | full-auto |
+| Gemini | `gemini` | `gemini` | yolo |
+
+Override per-run: `--agent claude --model claude-sonnet-4-5-20250514`
+
+Agent binaries must be installed and available in PATH. Set custom paths via environment variables: `CLAUDE_BIN_PATH`, `CODEX_BIN_PATH`, `GEMINI_BIN_PATH`.
 
 ## .anyt File Format Quick Reference
 
@@ -328,40 +484,41 @@ All execution state lives in `{workdir}/.anyt/cells/`:
 schema: "2.0"
 name: notebook-name
 workdir: anyt_workspace_name
-env_file: ".env"
 ---
 
 # notebook-name
 
-<shell id="setup" label="Setup">
-mkdir -p src
-</shell>
+<note id="note-intro" label="Introduction">
+Documentation content (auto-completes).
+</note>
 
-<task id="create-api" label="Create API">
-Create a REST API with Express.js.
-**Output:** src/app.ts
-</task>
+<input id="input-config" label="Config">
+Description of what input is needed.
 
-<input id="config" label="Config">
 <form type="json">
-{"fields": [{"name": "port", "type": "number", "label": "Port", "default": 3000}]}
+{"fields": [
+  {"name": "port", "type": "number", "label": "Port", "default": 3000},
+  {"name": "db", "type": "select", "label": "Database", "options": [
+    {"value": "sqlite", "label": "SQLite"},
+    {"value": "postgres", "label": "PostgreSQL"}
+  ]}
+]}
 </form>
 </input>
 
-<break id="review" label="Review">
-Check the output before continuing.
-</break>
+<shell id="shell-setup" label="Setup">
+mkdir -p src && npm init -y
+</shell>
 
-<note id="done" label="Complete">
-All done.
-</note>
+<task id="task-build" label="Build App">
+Create the application using the user's configuration.
+Read input from .anyt/cells/input-config/response.json.
+**Output:** src/app.ts, src/db.ts
+</task>
+
+<break id="break-review" label="Review" skip="true">
+Review the generated code.
+</break>
 ```
 
-**Cell attributes:** `id` (required), `label` (optional), `agent` (optional: `claude`/`codex`/`gemini`), `skip` (break cells only, value `"true"`).
-
-## Limitations
-
-- Input cells with `file` type fields reference local filesystem paths — verify files exist before using them.
-- The `agent` attribute is informational when you are the sole executing agent.
-- Shell cells assume bash. Scripts with `#!/bin/bash` shebang are recommended.
-- Environment variables from `.env` must be loaded before each shell cell execution if running cells individually.
+**Cell attributes:** `id` (required), `label` (optional), `agent` (optional), `skip` (break cells only).
