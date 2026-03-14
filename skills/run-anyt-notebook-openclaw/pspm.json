@@ -1,0 +1,26 @@
+{
+  "$schema": "https://pspm.dev/schema/v1/pspm.json",
+  "name": "run-anyt-notebook-openclaw",
+  "version": "0.1.0",
+  "description": "Run AnyT Notebook (.anyt.md) files as the coding agent — execute task cells directly instead of spawning sub-agents. For OpenClaw and similar external agents.",
+  "author": "Bin Sheng <supercarl87@gmail.com>",
+  "license": "Apache-2.0",
+  "type": "skill",
+  "capabilities": [
+    "Run AnyT notebooks cell-by-cell as the coding agent",
+    "Execute task cells directly without spawning sub-agents",
+    "Handle shell, input, break, and note cells via CLI",
+    "Write completion markers and summaries for task cells",
+    "Resume interrupted notebook execution"
+  ],
+  "main": "SKILL.md",
+  "requirements": {
+    "pspm": ">=0.1.0"
+  },
+  "files": [
+    "SKILL.md",
+    "references"
+  ],
+  "dependencies": {},
+  "private": false
+}

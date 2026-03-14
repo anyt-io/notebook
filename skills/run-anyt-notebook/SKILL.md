@@ -205,6 +205,30 @@ Flags: `--agent`, `--model`, `--permission-mode`, `--env-file <path>`, `--verbos
 
 **Note:** Input cells cannot be run with `run-cell` — use `submit-input` instead.
 
+### `mark-done` — Mark Cell Complete (External Agents)
+
+Mark a cell as done or failed without executing it via the CLI. For external agents that execute task cells directly:
+
+```bash
+# Mark as done with summary and output files
+notebook-cli mark-done notebook.anyt.md task-main \
+  --summary "Created the application" \
+  --outputs "src/app.ts,src/db.ts"
+
+# Mark as failed
+notebook-cli mark-done notebook.anyt.md task-main \
+  --failed --error "Build failed: missing dependency"
+```
+
+**Flags:**
+
+| Flag | Description |
+|------|-------------|
+| `--summary <text>` | Summary of what was accomplished |
+| `--outputs <files>` | Comma-separated list of output files |
+| `--failed` | Mark as failed instead of done |
+| `--error <message>` | Error message (used with `--failed`) |
+
 ### `reset` — Reset Cell State
 
 ```bash
@@ -431,6 +455,22 @@ When waiting for input:
     "status": "waiting-input",
     "cellId": "input-config",
     "description": "Configure settings..."
+  }
+}
+```
+
+The `next` command in JSON mode also returns the `workdir` (absolute workspace path):
+```json
+{
+  "ok": true,
+  "command": "next",
+  "data": {
+    "id": "task-main",
+    "type": "task",
+    "label": "Main Task",
+    "description": "...",
+    "agent": "claude",
+    "workdir": "/absolute/path/to/workspace"
   }
 }
 ```
