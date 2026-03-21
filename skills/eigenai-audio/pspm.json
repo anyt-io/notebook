@@ -1,0 +1,28 @@
+{
+  "$schema": "https://pspm.dev/schema/v1/pspm.json",
+  "name": "eigenai-audio",
+  "version": "0.1.0",
+  "description": "Generate speech and transcribe audio using EigenAI API. Supports text-to-speech (TTS) with multiple models (Higgs Audio, ChatterBox, Qwen3 TTS) and speech-to-text (ASR) with Whisper V3 Turbo. Features voice cloning, multilingual support, and streaming.",
+  "author": "Bin Sheng <supercarl87@gmail.com>",
+  "license": "Apache-2.0",
+  "type": "skill",
+  "capabilities": [
+    "text-to-speech",
+    "speech-to-text",
+    "voice-cloning",
+    "voice-upload",
+    "audio-streaming",
+    "audio-transcription",
+    "ai-audio-generation"
+  ],
+  "main": "SKILL.md",
+  "requirements": {
+    "pspm": ">=0.1.0"
+  },
+  "files": [
+    "SKILL.md",
+    "runtime"
+  ],
+  "dependencies": {},
+  "private": false
+}
