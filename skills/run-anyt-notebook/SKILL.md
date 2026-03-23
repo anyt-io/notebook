@@ -43,7 +43,7 @@ An AnyT Notebook (`.anyt.md`) is a markdown file with YAML frontmatter and order
 
 ```yaml
 ---
-schema: "2.0"
+schema: "2.1"
 name: my-notebook
 workdir: anyt_workspace_my_notebook
 ---
@@ -521,7 +521,7 @@ Agent binaries must be installed and available in PATH. Set custom paths via env
 
 ```yaml
 ---
-schema: "2.0"
+schema: "2.1"
 name: notebook-name
 workdir: anyt_workspace_name
 ---

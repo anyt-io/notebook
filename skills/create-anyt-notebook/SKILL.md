@@ -29,7 +29,7 @@ An `.anyt` file has two sections: YAML frontmatter and a body with cell tags.
 
 | Field | Type | Required | Default | Description |
 |-------|------|----------|---------|-------------|
-| `schema` | `"2.0"` | Yes | — | Must be first field, always `"2.0"` |
+| `schema` | `"2.1"` | Yes | — | Must be first field. New files use `"2.1"`. Parser accepts any `2.x`. |
 | `name` | string | Yes | — | Notebook identifier (used as heading) |
 | `description` | string | No | — | Human-readable summary |
 | `version` | string | No | — | Semantic version |
@@ -41,7 +41,7 @@ Minimal valid frontmatter:
 
 ```yaml
 ---
-schema: "2.0"
+schema: "2.1"
 name: my-notebook
 workdir: anyt_workspace_my_notebook
 ---
@@ -328,7 +328,7 @@ note (Phase 2) -> input -> task -> shell -> note (done)
 When generating a notebook, ensure:
 
 1. Frontmatter starts with `---` and ends with `---`
-2. `schema: "2.0"` is the first field in frontmatter
+2. `schema: "2.1"` is the first field in frontmatter (parser accepts any `2.x`)
 3. `name` is required
 4. `workdir` should use the `anyt_workspace_` prefix (e.g., `anyt_workspace_my_project`)
 5. Every cell `id` is unique within the file
@@ -346,7 +346,7 @@ When generating a notebook, ensure:
 
 ```yaml
 ---
-schema: "2.0"
+schema: "2.1"
 name: express-api
 description: Build an Express.js API with TypeScript
 workdir: anyt_workspace_express_api
