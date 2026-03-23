@@ -1,50 +1,57 @@
 # AnyT Notebook File Specification
 
-> **Spec version**: `2.4`
-> **Schema version**: `2.0`
-> **Last updated**: 2026-03-01
+> **User-friendly version**: See [docs.anyt.io/notebook/file-format](https://docs.anyt.io/notebook/file-format) for the Mintlify documentation.
+> This file is the canonical spec — Mintlify docs are derived from it.
+
+> **Schema version**: `2.1`
+> **Last updated**: 2026-03-20
 > **Purpose**: Complete specification for generating valid `.anyt.md` notebook files.
 > This document is designed to be consumed by AI systems as a reference for
 > creating, editing, and validating AnyT notebooks.
 
-### Spec Versions
+### Revision History
 
-| Spec Version | Schema Version | Date | Description |
-|--------------|----------------|------|-------------|
-| **2.4** | **2.0** | 2026-03-01 | Add `file` field type for file picker inputs. |
-| 2.3 | 2.0 | 2026-02-19 | Add `skip` attribute for break cells, global skip breakpoints toggle. Multi-document sessions. |
-| 2.2 | 2.0 | 2026-02-13 | Add `agent` attribute, `agents` frontmatter, health checks. Remove v1 schema. |
-| 2.1 | 2.0 | 2026-02-10 | Add `label` attribute. Cell IDs read-only in UI. |
-| 2.0 | 2.0 | 2026-02-05 | Initial schema 2.0. Structure-only file with folder-based state. |
+| Date | Schema Version | Description |
+|------|----------------|-------------|
+| **2026-03-20** | **2.1** | Bump schema version to 2.1. Parser accepts any 2.x schema version. |
+| 2026-03-01 | 2.0 | Add `file` field type for file picker inputs. |
+| 2026-02-19 | 2.0 | Add `skip` attribute for break cells, global skip breakpoints toggle. Multi-document sessions. |
+| 2026-02-13 | 2.0 | Add `agent` attribute, `agents` frontmatter, health checks. Remove v1 schema. |
+| 2026-02-10 | 2.0 | Add `label` attribute. Cell IDs read-only in UI. |
+| 2026-02-05 | 2.0 | Initial schema 2.0. Structure-only file with folder-based state. |
 
 ### Changelog
 
-#### 2.4 (2026-03-01)
+#### 2026-03-20
+- **Changed** schema version from `"2.0"` to `"2.1"`. New files are written with `schema: "2.1"`.
+- **Changed** parser accepts any `2.x` schema version (not just `"2.0"`), enabling forward compatibility.
+
+#### 2026-03-01
 - **Added** `file` field type for file picker inputs in input cells
 - **Added** `FileValue` format for file field values (filename, path, relativePath)
 - **Added** `accept` property for filtering file types (e.g., `image/*`, `.pdf,.doc`)
 - **Added** `multiple` property for allowing multiple file selection
 - **Added** file validation rules: `maxFiles`, `minFiles`
 
-#### 2.3 (2026-02-19)
+#### 2026-02-19
 - **Added** optional `skip` attribute on break cells to skip them during execution
 - **Added** global "Skip Breakpoints" toggle in execution options to skip all break cells
 - **Added** validation rule 14 for `skip` attribute (break cells only)
 
-#### 2.2 (2026-02-13)
+#### 2026-02-13
 - **Added** optional `agent` attribute on all cell types for per-cell agent profile override
 - **Added** `agents` frontmatter field for defining named agent profiles
 - **Added** validation rule 13 for agent profile references
-- **Removed** v1 schema support (`SchemaVersion` is now `"2.0"` only)
+- **Removed** v1 schema support (`SchemaVersion` is now `"2.0" | "2.1"`)
 - **Removed** `inputs` frontmatter field (replaced by form-based input cells)
 
-#### 2.1 (2026-02-10)
+#### 2026-02-10
 - **Added** optional `label` attribute on all cell types for human-friendly display names
 - **Added** validation rules 11-12 for valid attributes and label format
 - **Changed** UI behavior: label is now the primary cell name; cell ID is read-only
 - **Removed** workflow inputs feature from frontmatter
 
-#### 2.0 (2026-02-05)
+#### 2026-02-05
 - Initial schema 2.0 specification
 - Structure-only `.anyt.md` file format — all runtime state stored in `.anyt/cells/` folders
 - Five cell types: `task`, `shell`, `input`, `note`, `break`
@@ -84,7 +91,7 @@ Frontmatter MUST be enclosed between two `---` lines at the very start of the fi
 
 | Field | Type | Required | Default | Description |
 |-------|------|----------|---------|-------------|
-| `schema` | `"2.0"` | Yes | — | Always `"2.0"` for new files. Must be the first field. |
+| `schema` | `"2.0"` \| `"2.1"` | Yes | — | Schema version. New files use `"2.1"`. Parser accepts any `2.x`. Must be the first field. |
 | `name` | string | Yes | — | Notebook identifier (used as filename stem and heading) |
 | `description` | string | No | — | Human-readable summary |
 | `version` | string | No | — | Semantic version (e.g. `"1.0.0"`) |
@@ -148,7 +155,7 @@ Cells can reference an agent profile by its `id` using the `agent` attribute (se
 
 ```yaml
 ---
-schema: "2.0"
+schema: "2.1"
 name: my-notebook
 workdir: output
 ---
@@ -186,7 +193,7 @@ Shell cells run as login shells by default, which sources your shell profile fil
 
 ```yaml
 ---
-schema: "2.0"
+schema: "2.1"
 name: web-scraper
 description: Scrape and process website data
 version: 1.0.0
@@ -706,7 +713,7 @@ Based on the user's input from the "config" step:
 
 ```yaml
 ---
-schema: "2.0"
+schema: "2.1"
 name: hello-world
 workdir: hello-output
 ---
@@ -722,7 +729,7 @@ Create a file called hello.txt with the text "Hello from AnyT!"
 
 ```yaml
 ---
-schema: "2.0"
+schema: "2.1"
 name: express-api
 workdir: express-api
 ---
@@ -769,7 +776,7 @@ Run: `cd express-api && npx tsc && node dist/app.js`
 
 ```yaml
 ---
-schema: "2.0"
+schema: "2.1"
 name: project-scaffolder
 workdir: my-project
 ---
@@ -875,7 +882,7 @@ Run:
 
 ```yaml
 ---
-schema: "2.0"
+schema: "2.1"
 name: data-pipeline
 workdir: pipeline-output
 ---
@@ -934,7 +941,7 @@ Files: `raw/sales.csv`, `processed/sales-clean.csv`, `reports/summary.*`
 
 ```yaml
 ---
-schema: "2.0"
+schema: "2.1"
 name: image-processor
 workdir: image-output
 ---
@@ -1018,7 +1025,7 @@ Check `image-output/processed/` for the converted images.
 When generating a notebook, ensure:
 
 1. **Frontmatter**: Must start with `---` and end with `---`
-2. **`schema: "2.0"`**: Must be present as the first field in frontmatter
+2. **`schema: "2.1"`**: Must be present as the first field in frontmatter
 3. **`name`**: Required. Used in the `# heading` after frontmatter
 4. **`workdir`**: Should be set to a meaningful directory name
 5. **Unique IDs**: Every cell `id` must be unique within the file

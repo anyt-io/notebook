@@ -4,8 +4,8 @@ The `.anyt.md` file format is a Markdown-based notebook that defines a sequence 
 
 ## Current Version
 
-- **Spec version**: 2.4
-- **Schema version**: 2.0
+- **Schema version**: 2.1
+- **Last updated**: 2026-03-20
 
 ## Full Specification
 
