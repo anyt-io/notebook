@@ -1,0 +1,25 @@
+{
+  "$schema": "https://pspm.dev/schema/v1/pspm.json",
+  "name": "document-intake",
+  "version": "0.1.0",
+  "description": "Parse domain-specific documents into structured question banks for interview simulation systems",
+  "author": "Bin Sheng <supercarl87@gmail.com>",
+  "license": "Apache-2.0",
+  "type": "skill",
+  "capabilities": [
+    "document-parsing",
+    "question-generation",
+    "knowledge-extraction",
+    "domain-analysis"
+  ],
+  "main": "SKILL.md",
+  "requirements": {
+    "pspm": ">=0.1.0"
+  },
+  "files": [
+    "SKILL.md",
+    "runtime"
+  ],
+  "dependencies": {},
+  "private": true
+}

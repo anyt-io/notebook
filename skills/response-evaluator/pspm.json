@@ -1,0 +1,26 @@
+{
+  "$schema": "https://pspm.dev/schema/v1/pspm.json",
+  "name": "response-evaluator",
+  "version": "0.1.0",
+  "description": "NLP-based answer evaluation with hallucination detection, ordinal mapping, statistical analysis, and confidence scoring for interview simulation responses.",
+  "author": "Bin Sheng <supercarl87@gmail.com>",
+  "license": "Apache-2.0",
+  "type": "skill",
+  "capabilities": [
+    "response-evaluation",
+    "hallucination-detection",
+    "ordinal-mapping",
+    "statistical-analysis",
+    "confidence-scoring"
+  ],
+  "main": "SKILL.md",
+  "requirements": {
+    "pspm": ">=0.1.0"
+  },
+  "files": [
+    "SKILL.md",
+    "runtime"
+  ],
+  "dependencies": {},
+  "private": true
+}

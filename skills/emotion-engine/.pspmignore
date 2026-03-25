@@ -1,0 +1,8 @@
+runtime/.venv/
+runtime/.ruff_cache/
+runtime/__pycache__/
+runtime/.pytest_cache/
+runtime/tests/
+runtime/.python-version
+runtime/uv.lock
+output/

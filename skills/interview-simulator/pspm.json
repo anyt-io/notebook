@@ -1,0 +1,26 @@
+{
+  "$schema": "https://pspm.dev/schema/v1/pspm.json",
+  "name": "interview-sim",
+  "version": "0.1.0",
+  "description": "Core interview simulation orchestration engine with question flow management, branching logic, adaptive difficulty, and confidence-based scoring for domain-specific interview preparation.",
+  "author": "Bin Sheng <supercarl87@gmail.com>",
+  "license": "Apache-2.0",
+  "type": "skill",
+  "capabilities": [
+    "interview-simulation",
+    "question-flow",
+    "adaptive-difficulty",
+    "confidence-scoring",
+    "interview-analysis"
+  ],
+  "main": "SKILL.md",
+  "requirements": {
+    "pspm": ">=0.1.0"
+  },
+  "files": [
+    "SKILL.md",
+    "runtime"
+  ],
+  "dependencies": {},
+  "private": true
+}

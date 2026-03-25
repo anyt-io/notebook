@@ -1,0 +1,26 @@
+{
+  "$schema": "https://pspm.dev/schema/v1/pspm.json",
+  "name": "emotion-engine",
+  "version": "0.1.0",
+  "description": "Map user response sentiment and tone to avatar emotional states. Generates emotion sequences and animation scripts for avatar rendering in interview simulations.",
+  "author": "Bin Sheng <supercarl87@gmail.com>",
+  "license": "Apache-2.0",
+  "type": "skill",
+  "capabilities": [
+    "sentiment-analysis",
+    "emotion-mapping",
+    "animation-scripting",
+    "tone-detection",
+    "avatar-emotion"
+  ],
+  "main": "SKILL.md",
+  "requirements": {
+    "pspm": ">=0.1.0"
+  },
+  "files": [
+    "SKILL.md",
+    "runtime"
+  ],
+  "dependencies": {},
+  "private": true
+}

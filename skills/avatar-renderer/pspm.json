@@ -1,0 +1,26 @@
+{
+  "$schema": "https://pspm.dev/schema/v1/pspm.json",
+  "name": "avatar-renderer",
+  "version": "0.1.0",
+  "description": "Render avatar images with emotional facial expressions and animation sequences for interview simulation systems.",
+  "author": "Bin Sheng <supercarl87@gmail.com>",
+  "license": "Apache-2.0",
+  "type": "skill",
+  "capabilities": [
+    "avatar-rendering",
+    "facial-expression",
+    "animation-frames",
+    "sprite-generation",
+    "emotion-visualization"
+  ],
+  "main": "SKILL.md",
+  "requirements": {
+    "pspm": ">=0.1.0"
+  },
+  "files": [
+    "SKILL.md",
+    "runtime"
+  ],
+  "dependencies": {},
+  "private": true
+}

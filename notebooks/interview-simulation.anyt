@@ -1,0 +1,449 @@
+---
+schema: "2.1"
+name: interview-simulation
+description: Domain-specific interview simulation pipeline with document intake,
+  adaptive questioning, emotion-driven avatar, response evaluation, and user profiling
+version: 1.0.0
+workdir: anyt_workspace_interview_simulation
+agents:
+  - id: claude-default
+    name: Claude Code
+    type: claude
+    default: true
+    permissionMode: bypassPermissions
+  - id: codex-default
+    name: Codex
+    type: codex
+    permissionMode: dangerously-bypass
+---
+
+# interview-simulation
+
+<note id="overview" label="Overview">
+## Domain-Specific Interview Simulation
+
+This notebook implements a full interview simulation pipeline based on patent US 2026/0050707 A1 — "Methods and Systems for Domain-Specific Interview Simulations."
+
+### Pipeline
+1. **Setup** — Verify environment and install all 6 skills
+2. **Configure** — Select interview domain and upload reference documents
+3. **Document Intake** — Parse domain documents into structured question banks
+4. **Simulation Config** — Set interview parameters (difficulty, question count, thresholds)
+5. **Run Interview** — Execute adaptive interview simulation with scoring
+6. **Emotion Analysis** — Analyze responses for sentiment and generate avatar emotions
+7. **Avatar Rendering** — Render avatar frames with emotional expressions
+8. **Response Evaluation** — Detect hallucinations, compute ordinal mappings, score responses
+9. **User Profiling** — Update user profile and generate training recommendations
+10. **Final Report** — Compile comprehensive interview analysis report
+
+### Skills Used
+- `document-intake` — Parse domain documents into question banks
+- `interview-simulator` — Core interview orchestration engine
+- `emotion-engine` — Sentiment analysis and emotion mapping
+- `avatar-renderer` — Avatar facial expression rendering
+- `response-evaluator` — Hallucination detection and statistical scoring
+- `user-profiler` — Performance tracking and recommendations
+</note>
+
+<shell id="check-env" label="Check Environment">
+#!/bin/bash
+echo "=== Checking Environment ==="
+
+echo "=== Checking uv ==="
+if command -v uv &> /dev/null; then
+  echo "uv $(uv --version) found"
+else
+  echo "ERROR: uv is not installed. Install from https://docs.astral.sh/uv/"
+  exit 1
+fi
+
+echo ""
+echo "=== Environment OK ==="
+</shell>
+
+<shell id="install-skills" label="Install Skills">
+#!/bin/bash
+echo "=== Installing Interview Simulation Skills ==="
+
+echo ""
+echo "--- document-intake ---"
+npx @anytio/pspm@latest add @user/anyt/document-intake -y
+
+echo ""
+echo "--- interview-simulator ---"
+npx @anytio/pspm@latest add @user/anyt/interview-sim -y
+
+echo ""
+echo "--- emotion-engine ---"
+npx @anytio/pspm@latest add @user/anyt/emotion-engine -y
+
+echo ""
+echo "--- avatar-renderer ---"
+npx @anytio/pspm@latest add @user/anyt/avatar-renderer -y
+
+echo ""
+echo "--- response-evaluator ---"
+npx @anytio/pspm@latest add @user/anyt/response-evaluator -y
+
+echo ""
+echo "--- user-profiler ---"
+npx @anytio/pspm@latest add @user/anyt/user-profiler -y
+
+echo ""
+echo "=== Verify Installed Skills ==="
+ls -la .pspm/skills/ 2>/dev/null || echo "Skills directory not found"
+
+echo ""
+echo "=== Setup Output Directories ==="
+mkdir -p documents question-bank interview-results emotions avatars evaluation profiles reports
+echo "Created output directories."
+</shell>
+
+<input id="domain-config" label="Interview Domain Configuration">
+## Configure Your Interview Simulation
+
+Select the domain and upload reference documents. The system will parse your documents and generate a domain-specific question bank.
+
+&nbsp;
+
+<form type="json">
+{
+  "fields": [
+    {
+      "name": "domain",
+      "type": "select",
+      "label": "Interview Domain",
+      "required": true,
+      "default": "immigration",
+      "options": [
+        { "value": "immigration", "label": "Immigration / Visa Interview" },
+        { "value": "law", "label": "Legal / Law Enforcement" },
+        { "value": "medical", "label": "Medical / Clinical" },
+        { "value": "finance", "label": "Finance / Banking" },
+        { "value": "education", "label": "Education / Academic" },
+        { "value": "custom", "label": "Custom Domain" }
+      ],
+      "description": "The domain determines the interview context, question style, and evaluation criteria"
+    },
+    {
+      "name": "documentPath",
+      "type": "file",
+      "label": "Reference Document",
+      "required": true,
+      "accept": ".pdf,.txt,.md,.docx",
+      "multiple": false,
+      "description": "Upload a PDF, text, or markdown file containing domain-specific rules, regulations, or procedures"
+    },
+    {
+      "name": "userId",
+      "type": "text",
+      "label": "User ID",
+      "required": true,
+      "default": "user001",
+      "description": "Unique identifier for tracking performance across sessions"
+    },
+    {
+      "name": "customDomain",
+      "type": "text",
+      "label": "Custom Domain Name (if Custom selected)",
+      "required": false,
+      "default": "",
+      "placeholder": "e.g., cybersecurity, aviation, real-estate"
+    }
+  ]
+}
+</form>
+</input>
+
+<task id="document-intake" label="Parse Domain Documents">
+Using the **document-intake** skill, parse the reference document from `domain-config`.
+
+1. Read the `documentPath` from `domain-config` input
+2. Run the document parser to extract sections, key terms, rules, and definitions
+3. Generate a structured question bank with categorized questions at varying difficulty levels
+4. Use the `domain` field from `domain-config` (or `customDomain` if "custom" was selected) as the domain context
+
+**Commands:**
+```bash
+uv run --project .pspm/skills/anyt/document-intake/runtime .pspm/skills/anyt/document-intake/runtime/intake.py \
+  --input "{documentPath}" \
+  --domain "{domain}" \
+  --output question-bank/
+```
+
+**Output:** `question-bank/parsed_document.json` and `question-bank/question_bank.json`
+
+After running, display a summary: total questions generated, categories found, and difficulty distribution.
+</task>
+
+<input id="review-questions" label="Review Question Bank">
+## Review Generated Questions
+
+Check the generated question bank in `question-bank/question_bank.json`. You can review the categories and questions before proceeding.
+
+&nbsp;
+
+<form type="json">
+{
+  "fields": [
+    {
+      "name": "approved",
+      "type": "select",
+      "label": "Question Bank Status",
+      "required": true,
+      "default": "approved",
+      "options": [
+        { "value": "approved", "label": "Approved — proceed to simulation" },
+        { "value": "regenerate", "label": "Regenerate — re-parse with adjustments" }
+      ]
+    },
+    {
+      "name": "feedback",
+      "type": "textarea",
+      "label": "Feedback (optional)",
+      "required": false,
+      "default": "",
+      "rows": 3,
+      "placeholder": "Any adjustments? e.g., 'focus more on visa categories' or 'add more difficult questions'"
+    }
+  ]
+}
+</form>
+</input>
+
+<input id="simulation-config" label="Simulation Settings">
+## Interview Simulation Parameters
+
+Configure how the interview simulation should run.
+
+&nbsp;
+
+<form type="json">
+{
+  "fields": [
+    {
+      "name": "maxQuestions",
+      "type": "select",
+      "label": "Maximum Questions",
+      "default": "15",
+      "options": [
+        { "value": "10", "label": "10 (Quick)" },
+        { "value": "15", "label": "15 (Standard)" },
+        { "value": "20", "label": "20 (Thorough)" },
+        { "value": "30", "label": "30 (Comprehensive)" }
+      ]
+    },
+    {
+      "name": "confidenceThreshold",
+      "type": "select",
+      "label": "Confidence Threshold",
+      "default": "0.7",
+      "options": [
+        { "value": "0.5", "label": "0.5 (Lenient)" },
+        { "value": "0.7", "label": "0.7 (Standard)" },
+        { "value": "0.85", "label": "0.85 (Strict)" }
+      ],
+      "description": "Minimum confidence score needed to pass the interview"
+    },
+    {
+      "name": "adaptiveDifficulty",
+      "type": "select",
+      "label": "Adaptive Difficulty",
+      "default": "true",
+      "options": [
+        { "value": "true", "label": "Enabled — adjusts based on performance" },
+        { "value": "false", "label": "Disabled — fixed difficulty" }
+      ]
+    },
+    {
+      "name": "startingDifficulty",
+      "type": "select",
+      "label": "Starting Difficulty",
+      "default": "2",
+      "options": [
+        { "value": "1", "label": "1 (Easy)" },
+        { "value": "2", "label": "2 (Moderate)" },
+        { "value": "3", "label": "3 (Medium)" },
+        { "value": "4", "label": "4 (Hard)" },
+        { "value": "5", "label": "5 (Expert)" }
+      ]
+    }
+  ]
+}
+</form>
+</input>
+
+<task id="prepare-simulation" label="Prepare Simulation Config">
+Create the simulation configuration file from `simulation-config` and `domain-config` inputs.
+
+1. Read settings from `simulation-config` (maxQuestions, confidenceThreshold, adaptiveDifficulty, startingDifficulty)
+2. Read domain from `domain-config`
+3. Create `interview-results/sim_config.json` with these settings:
+
+```json
+{
+  "max_questions": {maxQuestions},
+  "confidence_threshold": {confidenceThreshold},
+  "adaptive_difficulty": {adaptiveDifficulty},
+  "domain": "{domain}",
+  "starting_difficulty": {startingDifficulty}
+}
+```
+
+4. Also prepare a sample responses file `interview-results/responses.json` — generate realistic sample responses for the domain by reading the question bank. For each question in the bank (up to maxQuestions), write a plausible user response that includes a mix of good, mediocre, and some evasive answers to demonstrate the system's scoring capabilities.
+
+**Output:** `interview-results/sim_config.json` and `interview-results/responses.json`
+</task>
+
+<task id="run-interview" label="Run Interview Simulation">
+Using the **interview-simulator** skill, execute the interview simulation.
+
+**Commands:**
+```bash
+uv run --project .pspm/skills/anyt/interview-simulator/runtime .pspm/skills/anyt/interview-simulator/runtime/simulate.py \
+  --question-bank question-bank/question_bank.json \
+  --config interview-results/sim_config.json \
+  --responses interview-results/responses.json \
+  --output interview-results/
+```
+
+**Output:** `interview-results/interview_transcript.json` and `interview-results/interview_analysis.json`
+
+After running, display:
+- Total questions asked
+- Overall score
+- Category breakdown
+- Whether the confidence threshold was met
+</task>
+
+<task id="emotion-analysis" label="Analyze Response Emotions">
+Using the **emotion-engine** skill, analyze the interview transcript for emotional content and generate avatar emotion sequences.
+
+**Commands:**
+```bash
+uv run --project .pspm/skills/anyt/emotion-engine/runtime .pspm/skills/anyt/emotion-engine/runtime/analyze_emotion.py \
+  --transcript interview-results/interview_transcript.json \
+  --context interview \
+  --output emotions/
+```
+
+**Output:** `emotions/emotion_states.json` and `emotions/animation_script.json`
+
+After running, display:
+- Emotion distribution across the interview (how many times each emotion was triggered)
+- Notable emotional transitions (e.g., when the avatar shifted from attentive to skeptical)
+</task>
+
+<task id="render-avatars" label="Render Avatar Expressions">
+Using the **avatar-renderer** skill, render avatar frames for the key emotional states from the emotion analysis.
+
+1. Read `emotions/animation_script.json`
+2. Render a sprite sheet showing all emotion states:
+
+```bash
+uv run --project .pspm/skills/anyt/avatar-renderer/runtime .pspm/skills/anyt/avatar-renderer/runtime/render.py \
+  --sprite-sheet \
+  --output avatars/sprite_sheet.png
+```
+
+3. Render individual frames for the 3 most significant emotional moments from the interview:
+
+```bash
+uv run --project .pspm/skills/anyt/avatar-renderer/runtime .pspm/skills/anyt/avatar-renderer/runtime/render.py \
+  --emotion {emotion} --intensity {intensity} \
+  --output avatars/{emotion}_{index}.png
+```
+
+**Output:** `avatars/sprite_sheet.png` and individual emotion frames in `avatars/`
+</task>
+
+<task id="evaluate-responses" label="Evaluate Interview Responses">
+Using the **response-evaluator** skill, perform deep evaluation of interview responses.
+
+**Commands:**
+```bash
+uv run --project .pspm/skills/anyt/response-evaluator/runtime .pspm/skills/anyt/response-evaluator/runtime/evaluate.py \
+  --transcript interview-results/interview_transcript.json \
+  --question-bank question-bank/question_bank.json \
+  --output evaluation/
+```
+
+**Output:** `evaluation/evaluation_report.json`
+
+After running, display:
+- Overall evaluation score
+- Number of hallucinations detected
+- Any colliding/contradictory answers found
+- Confidence interval
+- Top recommendations
+</task>
+
+<task id="update-profile" label="Update User Profile">
+Using the **user-profiler** skill, update the user's profile with this session's results and generate training recommendations.
+
+1. Update profile with session results:
+
+```bash
+uv run --project .pspm/skills/anyt/user-profiler/runtime .pspm/skills/anyt/user-profiler/runtime/profile.py \
+  --user-id {userId} \
+  --session interview-results/interview_analysis.json \
+  --output profiles/
+```
+
+2. Generate recommendations:
+
+```bash
+uv run --project .pspm/skills/anyt/user-profiler/runtime .pspm/skills/anyt/user-profiler/runtime/profile.py \
+  --user-id {userId} \
+  --recommend \
+  --output profiles/
+```
+
+**Output:** `profiles/user_profile.json`, `profiles/recommendations.json`, `profiles/progress_report.json`
+
+After running, display:
+- Session count and performance trend
+- Weak areas needing improvement
+- Personalized training recommendations
+</task>
+
+<task id="final-report" label="Compile Final Report">
+Compile all results into a comprehensive markdown report at `reports/interview_report.md`.
+
+The report should include:
+
+## Interview Simulation Report
+
+### 1. Session Summary
+- Domain, date, user ID
+- Questions asked, time spent
+- Overall pass/fail against confidence threshold
+
+### 2. Score Breakdown
+- Overall score and confidence interval
+- Per-category scores from `interview-results/interview_analysis.json`
+- Difficulty progression chart (text-based)
+
+### 3. Response Evaluation
+- Hallucination summary from `evaluation/evaluation_report.json`
+- Colliding answers identified
+- Response quality distribution
+
+### 4. Emotional Analysis
+- Avatar emotion distribution from `emotions/emotion_states.json`
+- Key emotional transition moments
+- Reference the rendered avatar frames in `avatars/`
+
+### 5. User Progress
+- Trend direction (improving/declining/stable) from `profiles/progress_report.json`
+- Comparison with previous sessions (if any)
+
+### 6. Recommendations
+- Training recommendations from `profiles/recommendations.json`
+- Suggested focus areas for next session
+- Recommended difficulty for next attempt
+
+Save to `reports/interview_report.md`.
+
+**Output:** `reports/interview_report.md`
+</task>
