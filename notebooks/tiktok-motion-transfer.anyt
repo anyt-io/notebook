@@ -5,16 +5,7 @@ description: Download a TikTok video and use Kling Motion Control to transfer
   its motion onto a reference image character
 version: 1.0.0
 workdir: anyt_workspace_tiktok_motion
-agents:
-  - id: claude-default
-    name: Claude Code
-    type: claude
-    default: true
-    permissionMode: bypassPermissions
-  - id: codex-default
-    name: Codex
-    type: codex
-    permissionMode: dangerously-bypass
+agent: claude
 ---
 
 # tiktok-motion-transfer

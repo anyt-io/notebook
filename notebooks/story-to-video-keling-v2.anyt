@@ -6,16 +6,7 @@ description: Generate a short AI video from a story idea using Gemini Image for
   control
 version: 1.0.0
 workdir: anyt_workspace_story_to_video_keling_v2
-agents:
-  - id: claude-default
-    name: Claude Code
-    type: claude
-    default: true
-    permissionMode: bypassPermissions
-  - id: codex-default
-    name: Codex
-    type: codex
-    permissionMode: dangerously-bypass
+agent: claude
 ---
 
 # story-to-video-keling-v2

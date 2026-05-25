@@ -4,16 +4,7 @@ name: gemini-image-playground
 description: Generate and edit images using Google Gemini API — text-to-image,
   image editing, aspect ratios, and high-resolution output
 workdir: anyt_workspace_gemini_image
-agents:
-  - id: claude-default
-    name: Claude Code
-    type: claude
-    default: true
-    permissionMode: bypassPermissions
-  - id: codex-default
-    name: Codex
-    type: codex
-    permissionMode: dangerously-bypass
+agent: claude
 ---
 
 # gemini-image-playground

@@ -4,16 +4,7 @@ name: image-background-remover
 description: Remove backgrounds from images, review with human-in-the-loop, edit
   in Photoshop if needed, then upscale final images
 workdir: anyt_workspace_image_bg_remover
-agents:
-  - id: claude-default
-    name: Claude Code
-    type: claude
-    default: true
-    permissionMode: bypassPermissions
-  - id: codex-default
-    name: Codex
-    type: codex
-    permissionMode: dangerously-bypass
+agent: claude
 ---
 
 # image-background-remover
