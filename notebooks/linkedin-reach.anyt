@@ -4,16 +4,7 @@ name: linkedin-reach
 description: Find LinkedIn connections matching specific criteria and send
   personalized cold outreach about AnyT Notebook
 workdir: anyt_workspace_linkedin_reach
-agents:
-  - id: claude-default
-    name: Claude Code
-    type: claude
-    default: true
-    permissionMode: bypassPermissions
-  - id: codex-default
-    name: Codex
-    type: codex
-    permissionMode: dangerously-bypass
+agent: claude
 ---
 
 # linkedin-reach

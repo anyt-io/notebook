@@ -2,16 +2,7 @@
 schema: "2.0"
 name: youtube-video-summarizer-fast
 workdir: anyt_workspace_yt_summarizer_fast
-agents:
-  - id: claude-default
-    name: Claude Code
-    type: claude
-    default: true
-    permissionMode: bypassPermissions
-  - id: codex-default
-    name: Codex
-    type: codex
-    permissionMode: dangerously-bypass
+agent: claude
 ---
 
 # youtube-video-summarizer-fast

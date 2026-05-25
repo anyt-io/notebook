@@ -2,16 +2,7 @@
 schema: "2.0"
 name: youtube-podcast-to-ebook
 workdir: anyt_workspace_podcast_ebook
-agents:
-  - id: claude-default
-    name: Claude Code
-    type: claude
-    default: true
-    permissionMode: bypassPermissions
-  - id: codex-default
-    name: Codex
-    type: codex
-    permissionMode: dangerously-bypass
+agent: claude
 ---
 
 # youtube-podcast-to-ebook

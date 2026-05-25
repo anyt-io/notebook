@@ -5,16 +5,7 @@ description: Convert a blog page into Xiaohongshu/Rednote card images
 workdir: anyt_workspace_rednote
 dependencies:
   rednote: 0.1.0
-agents:
-  - id: claude-default
-    name: Claude Code
-    type: claude
-    default: true
-    permissionMode: bypassPermissions
-  - id: codex-default
-    name: Codex
-    type: codex
-    permissionMode: dangerously-bypass
+agent: claude
 ---
 
 # page-to-rednote
