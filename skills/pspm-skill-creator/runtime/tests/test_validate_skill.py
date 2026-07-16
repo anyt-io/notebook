@@ -79,9 +79,31 @@ class TestValidateSkill:
             validate_skill(tmp_path)
 
     def test_valid_pspm_json(self, tmp_path: Path):
-        _create_skill_md(tmp_path, "name: test-skill\ndescription: A test skill\n")
-        (tmp_path / "pspm.json").write_text('{"name": "test-skill"}')
-        name = validate_skill(tmp_path)
+        skill_path = tmp_path / "test-skill"
+        _create_skill_md(skill_path, "name: test-skill\ndescription: A test skill\n")
+        (skill_path / "pspm.json").write_text('{"name": "test-skill"}')
+        name = validate_skill(skill_path)
+        assert name == "test-skill"
+
+    def test_pspm_json_name_with_spaces(self, tmp_path: Path):
+        skill_path = tmp_path / "test-skill"
+        _create_skill_md(skill_path, "name: test-skill\ndescription: A test skill\n")
+        (skill_path / "pspm.json").write_text('{"name": "Test Skill"}')
+        with pytest.raises(ValidationError, match="kebab-case"):
+            validate_skill(skill_path)
+
+    def test_pspm_json_name_mismatches_directory(self, tmp_path: Path):
+        skill_path = tmp_path / "test-skill"
+        _create_skill_md(skill_path, "name: test-skill\ndescription: A test skill\n")
+        (skill_path / "pspm.json").write_text('{"name": "other-name"}')
+        with pytest.raises(ValidationError, match="must match the skill directory"):
+            validate_skill(skill_path)
+
+    def test_pspm_json_title_allows_display_name(self, tmp_path: Path):
+        skill_path = tmp_path / "test-skill"
+        _create_skill_md(skill_path, "name: test-skill\ndescription: A test skill\n")
+        (skill_path / "pspm.json").write_text('{"name": "test-skill", "title": "Test Skill"}')
+        name = validate_skill(skill_path)
         assert name == "test-skill"
 
     def test_invalid_pspm_json(self, tmp_path: Path):

@@ -33,6 +33,7 @@ PSPM_JSON_TEMPLATE = """\
 {{
   "$schema": "https://pspm.dev/schema/v1/pspm.json",
   "name": "{name}",
+  "title": "{title}",
   "version": "0.1.0",
   "description": "TODO — brief description",
   "author": "TODO",

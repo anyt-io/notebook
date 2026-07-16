@@ -111,7 +111,7 @@ Check available MCPs — if useful for research (searching docs, finding similar
 
 Based on the user interview, fill in these components:
 
-- **name**: Skill identifier (kebab-case, max 64 chars)
+- **name**: Skill identifier — kebab-case only (lowercase letters, digits, single hyphens), max 64 chars, and it must match the skill folder name exactly. Never put spaces, underscores, colons, or Title Case in `name` — it becomes the slash command and publish specifier, so renaming later is a breaking change. Human-facing display names ("Code Review") go in the optional `title` field of `pspm.json`, not in `name`. Prefer verbs for action skills (`update-docs`) and nouns for knowledge skills (`brand-guidelines`).
 - **description**: When to trigger, what it does. This is the primary triggering mechanism — include both what the skill does AND specific contexts for when to use it. Note: Claude tends to "undertrigger" skills. Make descriptions a bit "pushy" — include trigger phrases the user might say.
 - **compatibility**: Required tools, dependencies (optional, rarely needed)
 - **the rest of the skill :)**
@@ -488,7 +488,7 @@ The `references/` directory has additional documentation:
 
 ## Limitations
 
-- Skill names must be kebab-case, max 64 characters
+- Skill names must be kebab-case, max 64 characters — `runtime/validate_skill.py` enforces this for both the SKILL.md frontmatter `name` and the pspm.json `name`, and additionally requires the pspm.json `name` to match the skill folder. Display names with spaces belong in pspm.json `title`, never in `name`.
 - SKILL.md description max 1024 characters
 - Keep SKILL.md body under 500 lines to minimize context bloat
 
