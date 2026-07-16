@@ -56,7 +56,7 @@ def init_skill(name: str, base_path: Path, skill_type: str = "py") -> Path:
     (skill_path / "SKILL.md").write_text(SKILL_MD_TEMPLATE.format(name=name, title=title))
 
     # pspm.json
-    (skill_path / "pspm.json").write_text(PSPM_JSON_TEMPLATE.format(name=name))
+    (skill_path / "pspm.json").write_text(PSPM_JSON_TEMPLATE.format(name=name, title=title))
 
     # .pspmignore
     (skill_path / ".pspmignore").write_text(PSPMIGNORE_TEMPLATE)

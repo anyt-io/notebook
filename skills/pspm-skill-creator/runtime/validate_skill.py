@@ -92,9 +92,21 @@ def validate_skill(skill_path: Path) -> str:
     pspm_json = skill_path / "pspm.json"
     if pspm_json.exists():
         try:
-            json.loads(pspm_json.read_text())
+            manifest = json.loads(pspm_json.read_text())
         except json.JSONDecodeError as e:
             raise ValidationError(f"Invalid pspm.json: {e}") from e
+        # The manifest name is an identifier (publish specifier, folder name) —
+        # kebab-case only, matching the directory. Human display names belong
+        # in the optional 'title' field, never in 'name'.
+        manifest_name = manifest.get("name")
+        if manifest_name is not None:
+            if not isinstance(manifest_name, str):
+                raise ValidationError("pspm.json 'name' must be a string")
+            validate_name(manifest_name)
+            if manifest_name != skill_path.name:
+                raise ValidationError(
+                    f"pspm.json 'name' ({manifest_name!r}) must match the skill directory name ({skill_path.name!r})"
+                )
 
     return name
 
